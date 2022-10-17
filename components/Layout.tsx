@@ -1,6 +1,6 @@
 import { ConnectWalletButton } from "./ConnectWalletButton";
 import GlobalNotification from "./GlobalNotification";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AccountsModal from "./AccountsModal";
 import { useRouter } from "next/router";
 import FavoritesShortcutBar from "./FavoritesShortcutBar";
@@ -9,11 +9,23 @@ import { useTranslation } from "next-i18next";
 import { useWallet } from "@solana/wallet-adapter-react";
 import useMangoStore from "stores/useMangoStore";
 import { Transition } from "@headlessui/react";
+import useReimbursementStore from "stores/useReimbursementStore";
 
 const Layout = ({ children }) => {
   const router = useRouter();
   const { pathname } = router;
-
+  const connection = useMangoStore((s) => s.connection);
+  const wallet = useWallet();
+  const { setClient } = useReimbursementStore();
+  useEffect(() => {
+    if (wallet.connected && wallet.publicKey?.toBase58()) {
+      setClient(connection.current, wallet);
+    }
+  }, [
+    wallet.connected,
+    wallet.publicKey?.toBase58(),
+    connection.current.rpcEndpoint,
+  ]);
   return (
     <div className={`flex-grow bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <div className="flex">

@@ -11,7 +11,7 @@ import Notifications from "../components/Notification";
 import { ViewportProvider } from "../hooks/useViewport";
 import { appWithTranslation } from "next-i18next";
 import ErrorBoundary from "../components/ErrorBoundary";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { WalletProvider, WalletListener } from "components/WalletAdapter";
 import {
