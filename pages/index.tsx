@@ -8,8 +8,7 @@ import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import Button from "components/Button";
 import { chunks, isExistingTokenAccount } from "utils/tools";
 import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions";
-import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Token } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions";
 import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes";
 
@@ -63,7 +62,6 @@ const MainPage = () => {
   const reimburse = async (group: any, reimbursementAccount: PublicKey) => {
     const instructions: TransactionInstruction[] = [];
     const mintPk = group?.account.mints[0];
-
     const ataPk = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
       TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
@@ -88,7 +86,7 @@ const MainPage = () => {
       );
     }
     instructions.push(
-      reimbursementClient.program.methods
+      await reimbursementClient.program.methods
         .reimburse(new BN(0), new BN(0), false)
         .accounts({
           group: (group as any).publicKey,
@@ -121,21 +119,30 @@ const MainPage = () => {
       reimbursementAccount
     );
     const reimburseInstructions = await reimburse(group, reimbursementAccount);
-    const instructionsChunks = chunks(
-      [...accountInstructions, ...reimburseInstructions],
-      3
-    );
-    await sendSignAndConfirmTransactions({
-      connection: connection.current,
-      wallet,
-      transactionInstructions: instructionsChunks.map((x) => {
+    const reimburseInstructionsChunks = chunks([...reimburseInstructions], 4);
+    const instructionsToSend = [
+      ...accountInstructions.map((x) => {
         return {
-          instructionsSet: x.map((j) => {
+          instructionsSet: [x].map((j) => {
             return { transactionInstruction: j, signers: [] };
           }),
           sequenceType: SequenceType.Sequential,
         };
       }),
+      ...reimburseInstructionsChunks.map((x) => {
+        return {
+          instructionsSet: x.map((j) => {
+            return { transactionInstruction: j, signers: [] };
+          }),
+          sequenceType: SequenceType.Parallel,
+        };
+      }),
+    ];
+    console.log(instructionsToSend);
+    await sendSignAndConfirmTransactions({
+      connection: connection.current,
+      wallet,
+      transactionInstructions: instructionsToSend,
     });
   };
   useEffect(() => {
