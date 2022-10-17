@@ -49,7 +49,9 @@ const MainPage = () => {
   const wallet = useWallet();
   const { reimbursementClient } = useReimbursementStore();
 
-  const [mintInfos, setMintInfos] = useState<{ [key: string]: MintInfo }>({});
+  const [mintsForAvailableAmounts, setMintsForAvailableAmounts] = useState<{
+    [key: string]: MintInfo;
+  }>({});
   const [table, setTable] = useState<TableInfo[]>([]);
   const [amountsLoading, setAmountsLoading] = useState(false);
   const [transferLoading, setTransferLoading] = useState(false);
@@ -97,7 +99,7 @@ const MainPage = () => {
             )?.symbol,
           };
         }
-        setMintInfos(mintInfos);
+        setMintsForAvailableAmounts(mintInfos);
         setTable(tableInfo);
       } else {
         resetAmountState();
@@ -112,7 +114,7 @@ const MainPage = () => {
     setAmountsLoading(false);
   };
   const resetAmountState = () => {
-    setMintInfos({});
+    setMintsForAvailableAmounts({});
     setTable([]);
   };
 
@@ -142,72 +144,78 @@ const MainPage = () => {
     transferClaim: boolean
   ) => {
     const instructions: TransactionInstruction[] = [];
+    //TODO run in loop for every mint that account is eligible
     const owner = wallet.publicKey!;
-    const mintPk = group?.account.mints[0];
-    const claimMintPk = group?.account.claimMints[0];
-    const ataPk = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-      TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-      mintPk, // mint
-      owner, // owner
-      true
-    );
-    const isExistingAta = await isExistingTokenAccount(
-      connection.current,
-      ataPk
-    );
-    if (!isExistingAta) {
+    for (const availableMintPk of Object.keys(mintsForAvailableAmounts)) {
+      const mintIndex = group?.account.mints.findIndex(
+        (x) => x.toBase58() === availableMintPk
+      );
+      const mintPk = group?.account.mints[mintIndex];
+      const claimMintPk = group?.account.claimMints[mintIndex];
+      const ataPk = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+        mintPk, // mint
+        owner, // owner
+        true
+      );
+      const isExistingAta = await isExistingTokenAccount(
+        connection.current,
+        ataPk
+      );
+      if (!isExistingAta) {
+        instructions.push(
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+            TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+            mintPk, // mint
+            ataPk, // ata
+            owner, // owner of token account
+            owner // fee payer
+          )
+        );
+      }
+      const daoAtaPk = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+        claimMintPk,
+        group?.account.claimTransferDestination!,
+        true
+      );
+      const isExistingDaoAta = await isExistingTokenAccount(
+        connection.current,
+        daoAtaPk
+      );
+      if (!isExistingDaoAta) {
+        instructions.push(
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+            TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+            claimMintPk, // mint
+            daoAtaPk, // ata
+            group?.account.claimTransferDestination, // owner of token account
+            owner // fee payer
+          )
+        );
+      }
       instructions.push(
-        Token.createAssociatedTokenAccountInstruction(
-          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-          mintPk, // mint
-          ataPk, // ata
-          owner, // owner of token account
-          owner // fee payer
-        )
+        await reimbursementClient.program.methods
+          .reimburse(new BN(mintIndex), new BN(mintIndex), transferClaim)
+          .accounts({
+            group: (group as any).publicKey,
+            vault: group?.account.vaults[mintIndex],
+            tokenAccount: ataPk,
+            mint: mintPk,
+            claimMint: claimMintPk,
+            claimMintTokenAccount: daoAtaPk,
+            reimbursementAccount,
+            mangoAccountOwner: wallet.publicKey,
+            table: group?.account.table,
+          })
+          .instruction()
       );
     }
-    const daoAtaPk = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-      TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-      claimMintPk,
-      group?.account.claimTransferDestination!,
-      true
-    );
-    const isExistingDaoAta = await isExistingTokenAccount(
-      connection.current,
-      daoAtaPk
-    );
-    console.log(isExistingDaoAta);
-    if (!isExistingDaoAta) {
-      instructions.push(
-        Token.createAssociatedTokenAccountInstruction(
-          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-          claimMintPk, // mint
-          daoAtaPk, // ata
-          group?.account.claimTransferDestination, // owner of token account
-          owner // fee payer
-        )
-      );
-    }
-    instructions.push(
-      await reimbursementClient.program.methods
-        .reimburse(new BN(0), new BN(0), transferClaim)
-        .accounts({
-          group: (group as any).publicKey,
-          vault: group?.account.vaults[0],
-          tokenAccount: ataPk,
-          mint: mintPk,
-          claimMint: claimMintPk,
-          claimMintTokenAccount: daoAtaPk,
-          reimbursementAccount,
-          mangoAccountOwner: wallet.publicKey,
-          table: group?.account.table,
-        })
-        .instruction()
-    );
+
     return instructions;
   };
   const handleReimbursement = async (transferClaim: boolean) => {
@@ -217,7 +225,6 @@ const MainPage = () => {
       setTransferLoading(true);
     }
     try {
-      //TODO run in loop for every mint
       const result = await reimbursementClient.program.account.group.all();
       const group = result.find(
         (group) => group.account.groupNum === GROUP_NUM
@@ -313,14 +320,21 @@ const MainPage = () => {
                       <div key={x.mintPubKey.toBase58()}>
                         <div>{x.mintPubKey.toBase58()}</div>
                         <div>
-                          {mintInfos[x.mintPubKey.toBase58()]
+                          {mintsForAvailableAmounts[x.mintPubKey.toBase58()]
                             ? toDecimalAmount(
                                 x.nativeAmount,
-                                mintInfos[x.mintPubKey.toBase58()].decimals
+                                mintsForAvailableAmounts[
+                                  x.mintPubKey.toBase58()
+                                ].decimals
                               )
                             : null}
                         </div>
-                        <div>{mintInfos[x.mintPubKey.toBase58()]?.symbol}</div>
+                        <div>
+                          {
+                            mintsForAvailableAmounts[x.mintPubKey.toBase58()]
+                              ?.symbol
+                          }
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -333,12 +347,12 @@ const MainPage = () => {
           <div className="space-x-4">
             <Button
               onClick={() => handleReimbursement(false)}
-              disabled={transferLoading}
+              disabled={transferLoading || !table.length}
             >
               {transferLoading ? <Loading></Loading> : "Reimburse"}
             </Button>
             <Button
-              disabled={claimTransferLoading}
+              disabled={claimTransferLoading || !table.length}
               onClick={() => handleReimbursement(true)}
             >
               {claimTransferLoading ? (
