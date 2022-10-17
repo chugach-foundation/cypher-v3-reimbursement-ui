@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { BN } from "@project-serum/anchor";
@@ -34,10 +34,17 @@ const MainPage = () => {
   const connection = useMangoStore((s) => s.connection);
   const wallet = useWallet();
   const { reimbursementClient } = useReimbursementStore();
-  const getAmounts = async () => {
+  const [mintInfos, setMintInfos] = useState([]);
+  const [table, setTable] = useState([]);
+  const getAmounts = async (walletPk: PublicKey) => {
     const result = await reimbursementClient.program.account.group.all();
     const group = result.find((group) => group.account.groupNum === GROUP_NUM);
-    //tbd
+    const table = await reimbursementClient.decodeTable(group);
+    const balancesForUser = table.rows.find((row) =>
+      row.owner.equals(walletPk)
+    ).balances;
+
+    console.log(balancesForUser);
   };
   const handleReimbursementAccount = async (
     group: any,
@@ -138,7 +145,7 @@ const MainPage = () => {
         };
       }),
     ];
-    console.log(instructionsToSend);
+
     await sendSignAndConfirmTransactions({
       connection: connection.current,
       wallet,
@@ -147,7 +154,7 @@ const MainPage = () => {
   };
   useEffect(() => {
     if (reimbursementClient) {
-      getAmounts();
+      getAmounts(wallet.publicKey!);
     }
   }, [reimbursementClient !== null]);
 

@@ -30,7 +30,6 @@ const Layout = ({ children }) => {
     <div className={`flex-grow bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <div className="flex">
         <div className="w-full overflow-hidden">
-          <GlobalNotification />
           <TopBar />
           {pathname === "/" ? <FavoritesShortcutBar /> : null}
           <div className="h-full">{children}</div>
