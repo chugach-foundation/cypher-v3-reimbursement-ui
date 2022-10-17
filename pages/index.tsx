@@ -12,6 +12,8 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions";
 import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes";
 import { Config } from "@blockworks-foundation/mango-client";
+import { notify } from "utils/notifications";
+import Loading from "components/Loading";
 
 const GROUP_NUM = 5;
 
@@ -45,55 +47,69 @@ const MainPage = () => {
   const connection = useMangoStore((s) => s.connection);
   const groupName = useMangoStore((s) => s.selectedMangoGroup);
   const wallet = useWallet();
-
   const { reimbursementClient } = useReimbursementStore();
+
   const [mintInfos, setMintInfos] = useState<{ [key: string]: MintInfo }>({});
   const [table, setTable] = useState<TableInfo[]>([]);
-
+  const [amountsLoading, setAmountsLoading] = useState(false);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [claimTransferLoading, setClaimTransferLoading] = useState(false);
   const getAccountAmountsInfo = async (walletPk: PublicKey) => {
-    const result = await reimbursementClient.program.account.group.all();
-    const group = result.find((group) => group.account.groupNum === GROUP_NUM);
-    const config = Config.ids();
-    const groupIds = config.getGroup(connection.cluster, groupName.name);
-    const table = await reimbursementClient.decodeTable(group);
-    const balancesForUser = table.rows.find((row) =>
-      row.owner.equals(walletPk)
-    )?.balances;
-    if (balancesForUser) {
-      const indexesToUse: number[] = [];
-      for (let i in balancesForUser) {
-        const isZero = balancesForUser[i].isZero();
-        if (!isZero) {
-          indexesToUse.push(Number(i));
-        }
-      }
-      const tableInfo = [
-        ...indexesToUse.map((idx) => {
-          return {
-            nativeAmount: balancesForUser[idx],
-            mintPubKey: group.account.mints[idx],
-          };
-        }),
-      ];
-      const mintPks = tableInfo.map((x) => x.mintPubKey);
-      const mints = await Promise.all(
-        mintPks.map((x) => connection.current.getParsedAccountInfo(x))
+    setAmountsLoading(true);
+    try {
+      const result = await reimbursementClient.program.account.group.all();
+      const group = result.find(
+        (group) => group.account.groupNum === GROUP_NUM
       );
-      const mintInfos = {};
-      for (let i = 0; i < mintPks.length; i++) {
-        const mintPk = mintPks[i];
-        mintInfos[mintPk.toBase58()] = {
-          decimals: (mints[i].value?.data as any).parsed.info.decimals,
-          symbol: groupIds!.tokens.find(
-            (x) => x.mintKey.toBase58() === mintPk.toBase58()
-          )?.symbol,
-        };
+      const config = Config.ids();
+      const groupIds = config.getGroup(connection.cluster, groupName.name);
+      const table = await reimbursementClient.decodeTable(group);
+      const balancesForUser = table.rows.find((row) =>
+        row.owner.equals(walletPk)
+      )?.balances;
+      if (balancesForUser) {
+        const indexesToUse: number[] = [];
+        for (let i in balancesForUser) {
+          const isZero = balancesForUser[i].isZero();
+          if (!isZero) {
+            indexesToUse.push(Number(i));
+          }
+        }
+        const tableInfo = [
+          ...indexesToUse.map((idx) => {
+            return {
+              nativeAmount: balancesForUser[idx],
+              mintPubKey: group.account.mints[idx],
+            };
+          }),
+        ];
+        const mintPks = tableInfo.map((x) => x.mintPubKey);
+        const mints = await Promise.all(
+          mintPks.map((x) => connection.current.getParsedAccountInfo(x))
+        );
+        const mintInfos = {};
+        for (let i = 0; i < mintPks.length; i++) {
+          const mintPk = mintPks[i];
+          mintInfos[mintPk.toBase58()] = {
+            decimals: (mints[i].value?.data as any).parsed.info.decimals,
+            symbol: groupIds!.tokens.find(
+              (x) => x.mintKey.toBase58() === mintPk.toBase58()
+            )?.symbol,
+          };
+        }
+        setMintInfos(mintInfos);
+        setTable(tableInfo);
+      } else {
+        resetAmountState();
       }
-      setMintInfos(mintInfos);
-      setTable(tableInfo);
-    } else {
-      resetAmountState();
+    } catch (e) {
+      notify({
+        type: "error",
+        title: "Failed to get account reimbursment amount",
+        description: `${e}`,
+      });
     }
+    setAmountsLoading(false);
   };
   const resetAmountState = () => {
     setMintInfos({});
@@ -163,6 +179,7 @@ const MainPage = () => {
       connection.current,
       daoAtaPk
     );
+    console.log(isExistingDaoAta);
     if (!isExistingDaoAta) {
       instructions.push(
         Token.createAssociatedTokenAccountInstruction(
@@ -194,52 +211,78 @@ const MainPage = () => {
     return instructions;
   };
   const handleReimbursement = async (transferClaim: boolean) => {
-    const result = await reimbursementClient.program.account.group.all();
-    const group = result.find((group) => group.account.groupNum === GROUP_NUM);
-    const reimbursementAccount = (
-      await PublicKey.findProgramAddress(
-        [
-          Buffer.from("ReimbursementAccount"),
-          group!.publicKey.toBuffer()!,
-          wallet!.publicKey!.toBuffer(),
-        ],
-        reimbursementClient.program.programId
-      )
-    )[0];
-    const accountInstructions = await getReimbursementAccountInstructions(
-      group,
-      reimbursementAccount
-    );
-    const reimburseInstructions = await getReimbursementInstructions(
-      group,
-      reimbursementAccount,
-      transferClaim
-    );
-    const reimburseInstructionsChunks = chunks([...reimburseInstructions], 4);
-    const instructionsToSend = [
-      ...accountInstructions.map((x) => {
-        return {
-          instructionsSet: [x].map((j) => {
-            return { transactionInstruction: j, signers: [] };
-          }),
-          sequenceType: SequenceType.Sequential,
-        };
-      }),
-      ...reimburseInstructionsChunks.map((x) => {
-        return {
-          instructionsSet: x.map((j) => {
-            return { transactionInstruction: j, signers: [] };
-          }),
-          sequenceType: SequenceType.Sequential,
-        };
-      }),
-    ];
+    if (transferClaim) {
+      setClaimTransferLoading(true);
+    } else {
+      setTransferLoading(true);
+    }
+    try {
+      //TODO run in loop for every mint
+      const result = await reimbursementClient.program.account.group.all();
+      const group = result.find(
+        (group) => group.account.groupNum === GROUP_NUM
+      );
+      const reimbursementAccount = (
+        await PublicKey.findProgramAddress(
+          [
+            Buffer.from("ReimbursementAccount"),
+            group!.publicKey.toBuffer()!,
+            wallet!.publicKey!.toBuffer(),
+          ],
+          reimbursementClient.program.programId
+        )
+      )[0];
+      const accountInstructions = await getReimbursementAccountInstructions(
+        group,
+        reimbursementAccount
+      );
+      const reimburseInstructions = await getReimbursementInstructions(
+        group,
+        reimbursementAccount,
+        transferClaim
+      );
+      const reimburseInstructionsChunks = chunks([...reimburseInstructions], 4);
+      const instructionsToSend = [
+        ...accountInstructions.map((x) => {
+          return {
+            instructionsSet: [x].map((j) => {
+              return { transactionInstruction: j, signers: [] };
+            }),
+            sequenceType: SequenceType.Sequential,
+          };
+        }),
+        ...reimburseInstructionsChunks.map((x) => {
+          return {
+            instructionsSet: x.map((j) => {
+              return { transactionInstruction: j, signers: [] };
+            }),
+            sequenceType: SequenceType.Sequential,
+          };
+        }),
+      ];
 
-    await sendSignAndConfirmTransactions({
-      connection: connection.current,
-      wallet,
-      transactionInstructions: instructionsToSend,
-    });
+      await sendSignAndConfirmTransactions({
+        connection: connection.current,
+        wallet,
+        transactionInstructions: instructionsToSend,
+      });
+      notify({
+        title: "Successful reimbursement",
+        type: "success",
+      });
+    } catch (e) {
+      notify({
+        title: "Something wen't wrong",
+        description: `${e.message}`,
+        txid: e?.txid,
+        type: "error",
+      });
+    }
+    if (transferClaim) {
+      setClaimTransferLoading(false);
+    } else {
+      setTransferLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -259,31 +302,50 @@ const MainPage = () => {
           <div className="pb-4">
             Connected wallet: {wallet.publicKey?.toBase58()}
           </div>
-          <div className="mb-4">
-            Amounts
+          {amountsLoading && <Loading></Loading>}
+          {!amountsLoading && (
             <div className="mb-4">
-              {table.map((x) => (
-                <div key={x.mintPubKey.toBase58()}>
-                  <div>{x.mintPubKey.toBase58()}</div>
-                  <div>
-                    {mintInfos[x.mintPubKey.toBase58()]
-                      ? toDecimalAmount(
-                          x.nativeAmount,
-                          mintInfos[x.mintPubKey.toBase58()].decimals
-                        )
-                      : null}
+              {table.length ? (
+                <>
+                  Amounts
+                  <div className="mb-4">
+                    {table.map((x) => (
+                      <div key={x.mintPubKey.toBase58()}>
+                        <div>{x.mintPubKey.toBase58()}</div>
+                        <div>
+                          {mintInfos[x.mintPubKey.toBase58()]
+                            ? toDecimalAmount(
+                                x.nativeAmount,
+                                mintInfos[x.mintPubKey.toBase58()].decimals
+                              )
+                            : null}
+                        </div>
+                        <div>{mintInfos[x.mintPubKey.toBase58()]?.symbol}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div>{mintInfos[x.mintPubKey.toBase58()]?.symbol}</div>
-                </div>
-              ))}
+                </>
+              ) : (
+                <>No tokens to reimburse for currently connected wallet</>
+              )}
             </div>
-          </div>
-          <div>
-            <Button onClick={() => handleReimbursement(false)}>
-              Reimburse
+          )}
+          <div className="space-x-4">
+            <Button
+              onClick={() => handleReimbursement(false)}
+              disabled={transferLoading}
+            >
+              {transferLoading ? <Loading></Loading> : "Reimburse"}
             </Button>
-            <Button onClick={() => handleReimbursement(true)}>
-              Transfer claim to dao
+            <Button
+              disabled={claimTransferLoading}
+              onClick={() => handleReimbursement(true)}
+            >
+              {claimTransferLoading ? (
+                <Loading></Loading>
+              ) : (
+                "Transfer claim to dao"
+              )}
             </Button>
           </div>
         </>
