@@ -780,30 +780,6 @@ const useMangoStore = create<
               console.error("Error fetching trade history", e);
             });
 
-          if (selectedMangoAccount.spotOpenOrdersAccounts.length) {
-            const openOrdersAccounts =
-              selectedMangoAccount.spotOpenOrdersAccounts.filter(isDefined);
-            const publicKeys = openOrdersAccounts.map((act) =>
-              act.publicKey.toString()
-            );
-            Promise.all(
-              publicKeys.map(async (pk) => {
-                const response = await fetch(
-                  `https://trade-history-api-v3.onrender.com/trades/open_orders/${pk.toString()}`
-                );
-                const parsedResponse = await response.json();
-                return parsedResponse?.data ? parsedResponse.data : [];
-              })
-            )
-              .then((serumTradeHistory) => {
-                set((state) => {
-                  state.tradeHistory.spot = serumTradeHistory;
-                });
-              })
-              .catch((e) => {
-                console.error("Error fetching trade history", e);
-              });
-          }
           set((state) => {
             state.tradeHistory.initialLoad = true;
           });

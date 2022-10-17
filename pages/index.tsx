@@ -6,11 +6,12 @@ import useMangoStore from "stores/useMangoStore";
 import useReimbursementStore from "stores/useReimbursementStore";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import Button from "components/Button";
-import { chunks, isExistingTokenAccount } from "utils/tools";
+import { chunks, isExistingTokenAccount, toDecimalAmount } from "utils/tools";
 import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions";
 import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes";
+import { Config } from "@blockworks-foundation/mango-client";
 
 const GROUP_NUM = 5;
 
@@ -35,38 +36,71 @@ type TableInfo = {
   mintPubKey: PublicKey;
 };
 
+type MintInfo = {
+  decimals: number;
+  symbol: string;
+};
+
 const MainPage = () => {
   const connection = useMangoStore((s) => s.connection);
+  const groupName = useMangoStore((s) => s.selectedMangoGroup);
   const wallet = useWallet();
+
   const { reimbursementClient } = useReimbursementStore();
-  const [mintInfos, setMintInfos] = useState([]);
+  const [mintInfos, setMintInfos] = useState<{ [key: string]: MintInfo }>({});
   const [table, setTable] = useState<TableInfo[]>([]);
-  const init = async (walletPk: PublicKey) => {
+
+  const getAccountAmountsInfo = async (walletPk: PublicKey) => {
     const result = await reimbursementClient.program.account.group.all();
     const group = result.find((group) => group.account.groupNum === GROUP_NUM);
-    console.log(group);
+    const config = Config.ids();
+    const groupIds = config.getGroup(connection.cluster, groupName.name);
     const table = await reimbursementClient.decodeTable(group);
     const balancesForUser = table.rows.find((row) =>
       row.owner.equals(walletPk)
-    ).balances;
-    const indexesToUse: number[] = [];
-    for (let i in balancesForUser) {
-      const isZero = balancesForUser[i].isZero();
-      if (!isZero) {
-        indexesToUse.push(Number(i));
+    )?.balances;
+    if (balancesForUser) {
+      const indexesToUse: number[] = [];
+      for (let i in balancesForUser) {
+        const isZero = balancesForUser[i].isZero();
+        if (!isZero) {
+          indexesToUse.push(Number(i));
+        }
       }
-    }
-    const tableInfo = [
-      ...indexesToUse.map((idx) => {
-        return {
-          nativeAmount: balancesForUser[idx],
-          mintPubKey: group.account.mints[idx],
+      const tableInfo = [
+        ...indexesToUse.map((idx) => {
+          return {
+            nativeAmount: balancesForUser[idx],
+            mintPubKey: group.account.mints[idx],
+          };
+        }),
+      ];
+      const mintPks = tableInfo.map((x) => x.mintPubKey);
+      const mints = await Promise.all(
+        mintPks.map((x) => connection.current.getParsedAccountInfo(x))
+      );
+      const mintInfos = {};
+      for (let i = 0; i < mintPks.length; i++) {
+        const mintPk = mintPks[i];
+        mintInfos[mintPk.toBase58()] = {
+          decimals: (mints[i].value?.data as any).parsed.info.decimals,
+          symbol: groupIds!.tokens.find(
+            (x) => x.mintKey.toBase58() === mintPk.toBase58()
+          )?.symbol,
         };
-      }),
-    ];
-    setTable(tableInfo);
+      }
+      setMintInfos(mintInfos);
+      setTable(tableInfo);
+    } else {
+      resetAmountState();
+    }
   };
-  const handleReimbursementAccount = async (
+  const resetAmountState = () => {
+    setMintInfos({});
+    setTable([]);
+  };
+
+  const getReimbursementAccountInstructions = async (
     group: any,
     reimbursementAccount: PublicKey
   ) => {
@@ -86,18 +120,20 @@ const MainPage = () => {
     }
     return instructions;
   };
-  const reimburse = async (
+  const getReimbursementInstructions = async (
     group: any,
     reimbursementAccount: PublicKey,
     transferClaim: boolean
   ) => {
     const instructions: TransactionInstruction[] = [];
+    const owner = wallet.publicKey!;
     const mintPk = group?.account.mints[0];
+    const claimMintPk = group?.account.claimMints[0];
     const ataPk = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
       TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
       mintPk, // mint
-      wallet.publicKey!, // owner
+      owner, // owner
       true
     );
     const isExistingAta = await isExistingTokenAccount(
@@ -111,8 +147,31 @@ const MainPage = () => {
           TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
           mintPk, // mint
           ataPk, // ata
-          wallet.publicKey!, // owner of token account
-          wallet.publicKey! // fee payer
+          owner, // owner of token account
+          owner // fee payer
+        )
+      );
+    }
+    const daoAtaPk = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+      TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+      claimMintPk,
+      group?.account.claimTransferDestination!,
+      true
+    );
+    const isExistingDaoAta = await isExistingTokenAccount(
+      connection.current,
+      daoAtaPk
+    );
+    if (!isExistingDaoAta) {
+      instructions.push(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+          claimMintPk, // mint
+          daoAtaPk, // ata
+          group?.account.claimTransferDestination, // owner of token account
+          owner // fee payer
         )
       );
     }
@@ -124,6 +183,8 @@ const MainPage = () => {
           vault: group?.account.vaults[0],
           tokenAccount: ataPk,
           mint: mintPk,
+          claimMint: claimMintPk,
+          claimMintTokenAccount: daoAtaPk,
           reimbursementAccount,
           mangoAccountOwner: wallet.publicKey,
           table: group?.account.table,
@@ -145,11 +206,11 @@ const MainPage = () => {
         reimbursementClient.program.programId
       )
     )[0];
-    const accountInstructions = await handleReimbursementAccount(
+    const accountInstructions = await getReimbursementAccountInstructions(
       group,
       reimbursementAccount
     );
-    const reimburseInstructions = await reimburse(
+    const reimburseInstructions = await getReimbursementInstructions(
       group,
       reimbursementAccount,
       transferClaim
@@ -169,7 +230,7 @@ const MainPage = () => {
           instructionsSet: x.map((j) => {
             return { transactionInstruction: j, signers: [] };
           }),
-          sequenceType: SequenceType.Parallel,
+          sequenceType: SequenceType.Sequential,
         };
       }),
     ];
@@ -180,11 +241,16 @@ const MainPage = () => {
       transactionInstructions: instructionsToSend,
     });
   };
+
   useEffect(() => {
     if (reimbursementClient) {
-      init(wallet.publicKey!);
+      if (wallet.publicKey) {
+        getAccountAmountsInfo(wallet.publicKey);
+      } else {
+        resetAmountState();
+      }
     }
-  }, [reimbursementClient !== null]);
+  }, [reimbursementClient !== null, wallet.publicKey?.toBase58()]);
 
   return (
     <div className="min-h-[400px] p-4">
@@ -195,11 +261,19 @@ const MainPage = () => {
           </div>
           <div className="mb-4">
             Amounts
-            <div>
+            <div className="mb-4">
               {table.map((x) => (
-                <div>
+                <div key={x.mintPubKey.toBase58()}>
                   <div>{x.mintPubKey.toBase58()}</div>
-                  <div>{x.nativeAmount.toNumber()}</div>
+                  <div>
+                    {mintInfos[x.mintPubKey.toBase58()]
+                      ? toDecimalAmount(
+                          x.nativeAmount,
+                          mintInfos[x.mintPubKey.toBase58()].decimals
+                        )
+                      : null}
+                  </div>
+                  <div>{mintInfos[x.mintPubKey.toBase58()]?.symbol}</div>
                 </div>
               ))}
             </div>

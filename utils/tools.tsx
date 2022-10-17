@@ -1,4 +1,5 @@
 import { Connection, PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 import { TOKEN_PROGRAM_ID } from "./tokens";
 
 export async function isExistingTokenAccount(
@@ -24,4 +25,8 @@ export function chunks<T>(array: T[], size: number): T[][] {
     result.push(array.slice(i, i + size));
   }
   return result;
+}
+
+export function toDecimalAmount(amount: BN, decimals: number) {
+  return amount.toNumber() / 10 ** decimals!;
 }
