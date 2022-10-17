@@ -30,21 +30,41 @@ export async function getStaticProps({ locale }) {
   };
 }
 
+type TableInfo = {
+  nativeAmount: BN;
+  mintPubKey: PublicKey;
+};
+
 const MainPage = () => {
   const connection = useMangoStore((s) => s.connection);
   const wallet = useWallet();
   const { reimbursementClient } = useReimbursementStore();
   const [mintInfos, setMintInfos] = useState([]);
-  const [table, setTable] = useState([]);
-  const getAmounts = async (walletPk: PublicKey) => {
+  const [table, setTable] = useState<TableInfo[]>([]);
+  const init = async (walletPk: PublicKey) => {
     const result = await reimbursementClient.program.account.group.all();
     const group = result.find((group) => group.account.groupNum === GROUP_NUM);
+    console.log(group);
     const table = await reimbursementClient.decodeTable(group);
     const balancesForUser = table.rows.find((row) =>
       row.owner.equals(walletPk)
     ).balances;
-
-    console.log(balancesForUser);
+    const indexesToUse: number[] = [];
+    for (let i in balancesForUser) {
+      const isZero = balancesForUser[i].isZero();
+      if (!isZero) {
+        indexesToUse.push(Number(i));
+      }
+    }
+    const tableInfo = [
+      ...indexesToUse.map((idx) => {
+        return {
+          nativeAmount: balancesForUser[idx],
+          mintPubKey: group.account.mints[idx],
+        };
+      }),
+    ];
+    setTable(tableInfo);
   };
   const handleReimbursementAccount = async (
     group: any,
@@ -66,7 +86,11 @@ const MainPage = () => {
     }
     return instructions;
   };
-  const reimburse = async (group: any, reimbursementAccount: PublicKey) => {
+  const reimburse = async (
+    group: any,
+    reimbursementAccount: PublicKey,
+    transferClaim: boolean
+  ) => {
     const instructions: TransactionInstruction[] = [];
     const mintPk = group?.account.mints[0];
     const ataPk = await Token.getAssociatedTokenAddress(
@@ -94,7 +118,7 @@ const MainPage = () => {
     }
     instructions.push(
       await reimbursementClient.program.methods
-        .reimburse(new BN(0), new BN(0), false)
+        .reimburse(new BN(0), new BN(0), transferClaim)
         .accounts({
           group: (group as any).publicKey,
           vault: group?.account.vaults[0],
@@ -108,7 +132,7 @@ const MainPage = () => {
     );
     return instructions;
   };
-  const handleReimbursement = async () => {
+  const handleReimbursement = async (transferClaim: boolean) => {
     const result = await reimbursementClient.program.account.group.all();
     const group = result.find((group) => group.account.groupNum === GROUP_NUM);
     const reimbursementAccount = (
@@ -125,7 +149,11 @@ const MainPage = () => {
       group,
       reimbursementAccount
     );
-    const reimburseInstructions = await reimburse(group, reimbursementAccount);
+    const reimburseInstructions = await reimburse(
+      group,
+      reimbursementAccount,
+      transferClaim
+    );
     const reimburseInstructionsChunks = chunks([...reimburseInstructions], 4);
     const instructionsToSend = [
       ...accountInstructions.map((x) => {
@@ -154,7 +182,7 @@ const MainPage = () => {
   };
   useEffect(() => {
     if (reimbursementClient) {
-      getAmounts(wallet.publicKey!);
+      init(wallet.publicKey!);
     }
   }, [reimbursementClient !== null]);
 
@@ -165,8 +193,24 @@ const MainPage = () => {
           <div className="pb-4">
             Connected wallet: {wallet.publicKey?.toBase58()}
           </div>
+          <div className="mb-4">
+            Amounts
+            <div>
+              {table.map((x) => (
+                <div>
+                  <div>{x.mintPubKey.toBase58()}</div>
+                  <div>{x.nativeAmount.toNumber()}</div>
+                </div>
+              ))}
+            </div>
+          </div>
           <div>
-            <Button onClick={handleReimbursement}>Reimburse</Button>
+            <Button onClick={() => handleReimbursement(false)}>
+              Reimburse
+            </Button>
+            <Button onClick={() => handleReimbursement(true)}>
+              Transfer claim to dao
+            </Button>
           </div>
         </>
       ) : (
