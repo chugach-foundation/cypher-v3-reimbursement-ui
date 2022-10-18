@@ -6,7 +6,12 @@ import useMangoStore from "stores/useMangoStore";
 import useReimbursementStore from "stores/useReimbursementStore";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import Button from "components/Button";
-import { chunks, isExistingTokenAccount, toDecimalAmount } from "utils/tools";
+import {
+  chunks,
+  isExistingTokenAccount,
+  toDecimalAmount,
+  tryDecodeTable,
+} from "utils/tools";
 import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions";
@@ -14,6 +19,8 @@ import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes";
 import { Config } from "@blockworks-foundation/mango-client";
 import { notify } from "utils/notifications";
 import Loading from "components/Loading";
+import { WalletIcon } from "components";
+import { CurrencyDollarIcon } from "@heroicons/react/solid";
 
 const GROUP_NUM = 5;
 
@@ -65,8 +72,9 @@ const MainPage = () => {
       );
       const config = Config.ids();
       const groupIds = config.getGroup(connection.cluster, groupName.name);
-      const table = await reimbursementClient.decodeTable(group);
-      const balancesForUser = table.rows.find((row) =>
+
+      const table = await tryDecodeTable(reimbursementClient, group);
+      const balancesForUser = table?.rows.find((row) =>
         row.owner.equals(walletPk)
       )?.balances;
       if (balancesForUser) {
@@ -144,7 +152,6 @@ const MainPage = () => {
     transferClaim: boolean
   ) => {
     const instructions: TransactionInstruction[] = [];
-    //TODO run in loop for every mint that account is eligible
     const owner = wallet.publicKey!;
     for (const availableMintPk of Object.keys(mintsForAvailableAmounts)) {
       const mintIndex = group?.account.mints.findIndex(
@@ -303,53 +310,65 @@ const MainPage = () => {
   }, [reimbursementClient !== null, wallet.publicKey?.toBase58()]);
 
   return (
-    <div className="min-h-[400px] p-4">
+    <div className="flex min-h-[400px] flex-col items-center p-4 pt-[50px]">
       {wallet.connected ? (
-        <>
-          <div className="pb-4">
-            Connected wallet: {wallet.publicKey?.toBase58()}
-          </div>
-          {amountsLoading && <Loading></Loading>}
-          {!amountsLoading && (
-            <div className="mb-4">
-              {table.length ? (
-                <>
-                  Amounts
-                  <div className="mb-4">
-                    {table.map((x) => (
-                      <div key={x.mintPubKey.toBase58()}>
-                        <div>{x.mintPubKey.toBase58()}</div>
-                        <div>
-                          {mintsForAvailableAmounts[x.mintPubKey.toBase58()]
-                            ? toDecimalAmount(
-                                x.nativeAmount,
-                                mintsForAvailableAmounts[
-                                  x.mintPubKey.toBase58()
-                                ].decimals
-                              )
-                            : null}
-                        </div>
-                        <div>
-                          {
-                            mintsForAvailableAmounts[x.mintPubKey.toBase58()]
-                              ?.symbol
-                          }
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>No tokens to reimburse for currently connected wallet</>
-              )}
+        <div className="flex w-2/3 flex-col space-y-4">
+          <h3>Connected wallet</h3>
+          <div className="border border-th-bkg-3 p-4">
+            <div className="flex flex-row items-center">
+              {" "}
+              <WalletIcon className="mr-3 w-5"></WalletIcon>
+              {wallet.publicKey?.toBase58()}
             </div>
-          )}
-          <div className="space-x-4">
+          </div>
+          <h3>Tokens</h3>
+          <div className="border border-th-bkg-3 p-4">
+            {amountsLoading && <Loading></Loading>}
+            {!amountsLoading && (
+              <div>
+                {table.length ? (
+                  <>
+                    Amounts
+                    <div className="mb-4">
+                      {table.map((x) => (
+                        <div key={x.mintPubKey.toBase58()}>
+                          <div>{x.mintPubKey.toBase58()}</div>
+                          <div>
+                            {mintsForAvailableAmounts[x.mintPubKey.toBase58()]
+                              ? toDecimalAmount(
+                                  x.nativeAmount,
+                                  mintsForAvailableAmounts[
+                                    x.mintPubKey.toBase58()
+                                  ].decimals
+                                )
+                              : null}
+                          </div>
+                          <div>
+                            {
+                              mintsForAvailableAmounts[x.mintPubKey.toBase58()]
+                                ?.symbol
+                            }
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-row">
+                    <CurrencyDollarIcon className="mr-3 w-5"></CurrencyDollarIcon>{" "}
+                    No tokens to reimburse for currently connected wallet
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-4">
             <Button
               onClick={() => handleReimbursement(false)}
               disabled={transferLoading || !table.length}
             >
-              {transferLoading ? <Loading></Loading> : "Reimburse"}
+              {transferLoading ? <Loading></Loading> : "Claim tokens"}
             </Button>
             <Button
               disabled={claimTransferLoading || !table.length}
@@ -358,13 +377,16 @@ const MainPage = () => {
               {claimTransferLoading ? (
                 <Loading></Loading>
               ) : (
-                "Transfer claim to dao"
+                "Claim and transfer claim to dao"
               )}
             </Button>
           </div>
-        </>
+        </div>
       ) : (
-        <div>Please connect your wallet</div>
+        <div className="flex items-center justify-center">
+          <WalletIcon className="mr-3 w-5"></WalletIcon> Please connect your
+          wallet
+        </div>
       )}
     </div>
   );

@@ -30,3 +30,13 @@ export function chunks<T>(array: T[], size: number): T[][] {
 export function toDecimalAmount(amount: BN, decimals: number) {
   return amount.toNumber() / 10 ** decimals!;
 }
+
+export async function tryDecodeTable(reimbursementClient, group) {
+  try {
+    const table = await reimbursementClient.decodeTable(group);
+    return table;
+  } catch (e) {
+    return null;
+    //silent error
+  }
+}

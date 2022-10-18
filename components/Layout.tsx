@@ -10,6 +10,8 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import useMangoStore from "stores/useMangoStore";
 import { Transition } from "@headlessui/react";
 import useReimbursementStore from "stores/useReimbursementStore";
+import { IconButton } from "./Button";
+import { CogIcon } from "@heroicons/react/solid";
 
 const Layout = ({ children }) => {
   const router = useRouter();
@@ -82,6 +84,12 @@ const TopBar = () => {
           </div>
         </div>
         <div className="flex items-center space-x-4">
+          <IconButton
+            className="h-8 w-8"
+            onClick={() => setShowSettingsModal(true)}
+          >
+            <CogIcon className="h-5 w-5" />
+          </IconButton>
           <ConnectWalletButton />
         </div>
       </div>
