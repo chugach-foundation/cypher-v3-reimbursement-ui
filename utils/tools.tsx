@@ -40,3 +40,18 @@ export async function tryDecodeTable(reimbursementClient, group) {
     //silent error
   }
 }
+
+export async function tryGetReimbursedAccounts(
+  reimbursementClient,
+  reimbursementAccount: PublicKey
+) {
+  try {
+    const ra =
+      await reimbursementClient!.program.account.reimbursementAccount.fetch(
+        reimbursementAccount
+      );
+    return ra;
+  } catch (e) {
+    return null;
+  }
+}
