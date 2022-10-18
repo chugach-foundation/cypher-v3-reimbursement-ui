@@ -4,17 +4,26 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { BN } from "@project-serum/anchor";
 import useMangoStore from "stores/useMangoStore";
 import useReimbursementStore from "stores/useReimbursementStore";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import Button from "components/Button";
 import {
   chunks,
+  createSyncNativeInstruction,
   isExistingTokenAccount,
   tryDecodeTable,
   tryGetReimbursedAccounts,
+  WSOL_MINT_PK,
 } from "utils/tools";
 import {
+  initializeAccount,
   TOKEN_PROGRAM_ID,
   transfer,
+  WRAPPED_SOL_MINT,
 } from "@project-serum/serum/lib/token-instructions";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions";
@@ -107,7 +116,7 @@ const MainPage = () => {
       const table = await tryDecodeTable(reimbursementClient, group);
       const balancesForUser = table.find((row) =>
         row.owner.equals(wallet.publicKey)
-      ).balances;
+      )?.balances;
       if (balancesForUser) {
         const indexesToUse: number[] = [];
         for (let i in balancesForUser) {
@@ -188,7 +197,35 @@ const MainPage = () => {
       );
       const mintPk = group?.account.mints[mintIndex];
       const claimMintPk = group?.account.claimMints[mintIndex];
-      const ataPk = await Token.getAssociatedTokenAddress(
+      const isWSolMint = mintPk.toBase58() === WSOL_MINT_PK.toBase58();
+
+      let ataPk = PublicKey.default;
+      //   if (isWSolMint) {
+      //     const keypair = new Keypair();
+      //     ataPk = keypair.publicKey;
+      //     const space = 165;
+      //     const rent = await connection.current.getMinimumBalanceForRentExemption(
+      //       space,
+      //       "processed"
+      //     );
+
+      //     instructions.push(
+      //       SystemProgram.createAccount({
+      //         fromPubkey: wallet.publicKey!,
+      //         newAccountPubkey: keypair?.publicKey,
+      //         lamports: rent,
+      //         space: space,
+      //         programId: TOKEN_PROGRAM_ID,
+      //       }),
+      //       initializeAccount({
+      //         account: keypair?.publicKey,
+      //         mint: WRAPPED_SOL_MINT,
+      //         owner: wallet.publicKey!,
+      //       })
+      //     );
+      //   }
+      // if (!isWSolMint) {
+      ataPk = await Token.getAssociatedTokenAddress(
         ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
         TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
         mintPk, // mint
@@ -211,6 +248,8 @@ const MainPage = () => {
           )
         );
       }
+      //}
+
       const daoAtaPk = await Token.getAssociatedTokenAddress(
         ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
         TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
@@ -242,6 +281,7 @@ const MainPage = () => {
             vault: group?.account.vaults[mintIndex],
             tokenAccount: ataPk,
             claimMint: claimMintPk,
+            //rename for that if we use msol acc
             claimMintTokenAccount: daoAtaPk,
             reimbursementAccount,
             mangoAccountOwner: wallet.publicKey!,
@@ -249,6 +289,10 @@ const MainPage = () => {
           })
           .instruction()
       );
+      if (isWSolMint) {
+        const syncIx = createSyncNativeInstruction(ataPk!);
+        instructions.push(syncIx);
+      }
     }
 
     return instructions;
