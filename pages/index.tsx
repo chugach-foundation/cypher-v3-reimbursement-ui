@@ -64,10 +64,11 @@ const MainPage = () => {
   const [amountsLoading, setAmountsLoading] = useState(false);
   const [transferLoading, setTransferLoading] = useState(false);
   const [claimTransferLoading, setClaimTransferLoading] = useState(false);
+  const getAreTokensClaimed = () => {};
   const getAccountAmountsInfo = async (walletPk: PublicKey) => {
     setAmountsLoading(true);
     try {
-      const result = await reimbursementClient.program.account.group.all();
+      const result = await reimbursementClient!.program.account.group.all();
       const group = result.find(
         (group) => group.account.groupNum === GROUP_NUM
       );
@@ -90,7 +91,7 @@ const MainPage = () => {
           ...indexesToUse.map((idx) => {
             return {
               nativeAmount: balancesForUser[idx],
-              mintPubKey: group.account.mints[idx],
+              mintPubKey: group!.account.mints[idx],
             };
           }),
         ];
@@ -135,12 +136,12 @@ const MainPage = () => {
     const isExistingReimbursementAccount =
       await connection.current.getAccountInfo(reimbursementAccount);
     if (!isExistingReimbursementAccount) {
-      const instruction = await reimbursementClient.program.methods
+      const instruction = await reimbursementClient!.program.methods
         .createReimbursementAccount()
         .accounts({
           group: (group as any).publicKey,
-          mangoAccountOwner: wallet.publicKey,
-          payer: wallet.publicKey,
+          mangoAccountOwner: wallet.publicKey!,
+          payer: wallet.publicKey!,
         })
         .instruction();
       instructions.push(instruction);
@@ -207,17 +208,16 @@ const MainPage = () => {
         );
       }
       instructions.push(
-        await reimbursementClient.program.methods
+        await reimbursementClient!.program.methods
           .reimburse(new BN(mintIndex), new BN(mintIndex), transferClaim)
           .accounts({
             group: (group as any).publicKey,
             vault: group?.account.vaults[mintIndex],
             tokenAccount: ataPk,
-            mint: mintPk,
             claimMint: claimMintPk,
             claimMintTokenAccount: daoAtaPk,
             reimbursementAccount,
-            mangoAccountOwner: wallet.publicKey,
+            mangoAccountOwner: wallet.publicKey!,
             table: group?.account.table,
           })
           .instruction()
@@ -233,7 +233,7 @@ const MainPage = () => {
       setTransferLoading(true);
     }
     try {
-      const result = await reimbursementClient.program.account.group.all();
+      const result = await reimbursementClient!.program.account.group.all();
       const group = result.find(
         (group) => group.account.groupNum === GROUP_NUM
       );
@@ -244,7 +244,7 @@ const MainPage = () => {
             group!.publicKey.toBuffer()!,
             wallet!.publicKey!.toBuffer(),
           ],
-          reimbursementClient.program.programId
+          reimbursementClient!.program.programId
         )
       )[0];
       const accountInstructions = await getReimbursementAccountInstructions(
