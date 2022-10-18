@@ -289,10 +289,10 @@ const MainPage = () => {
           })
           .instruction()
       );
-      if (isWSolMint) {
-        const syncIx = createSyncNativeInstruction(ataPk!);
-        instructions.push(syncIx);
-      }
+      //   if (isWSolMint) {
+      //     const syncIx = createSyncNativeInstruction(ataPk!);
+      //     instructions.push(syncIx);
+      //   }
     }
 
     return instructions;
