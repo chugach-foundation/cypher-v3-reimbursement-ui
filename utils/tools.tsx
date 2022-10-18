@@ -33,7 +33,7 @@ export function toDecimalAmount(amount: BN, decimals: number) {
 
 export async function tryDecodeTable(reimbursementClient, group) {
   try {
-    const table = await reimbursementClient.decodeTable(group);
+    const table = await reimbursementClient.decodeTable(group.account);
     return table;
   } catch (e) {
     return null;

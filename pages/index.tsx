@@ -21,8 +21,9 @@ import { notify } from "utils/notifications";
 import Loading from "components/Loading";
 import { WalletIcon } from "components";
 import { CurrencyDollarIcon } from "@heroicons/react/solid";
+import { abbreviateAddress } from "utils";
 
-const GROUP_NUM = 5;
+const GROUP_NUM = 13;
 
 export async function getStaticProps({ locale }) {
   return {
@@ -74,9 +75,9 @@ const MainPage = () => {
       const groupIds = config.getGroup(connection.cluster, groupName.name);
 
       const table = await tryDecodeTable(reimbursementClient, group);
-      const balancesForUser = table?.rows.find((row) =>
-        row.owner.equals(walletPk)
-      )?.balances;
+      const balancesForUser = table.find((row) =>
+        row.owner.equals(wallet.publicKey)
+      ).balances;
       if (balancesForUser) {
         const indexesToUse: number[] = [];
         for (let i in balancesForUser) {
@@ -315,7 +316,7 @@ const MainPage = () => {
         <div className="flex w-2/3 flex-col space-y-4">
           <h3>Connected wallet</h3>
           <div className="border border-th-bkg-3 p-4">
-            <div className="flex flex-row items-center">
+            <div className="flex flex-row items-center text-xs">
               {" "}
               <WalletIcon className="mr-3 w-5"></WalletIcon>
               {wallet.publicKey?.toBase58()}
@@ -326,33 +327,21 @@ const MainPage = () => {
             {amountsLoading && <Loading></Loading>}
             {!amountsLoading && (
               <div>
+                <div className="mb-2 flex space-x-3 border-b border-th-bkg-3 pb-2">
+                  <div className="w-8"></div>
+                  <div className="flex-1">Mint</div>
+                  <div className="flex-1">Amount to claim</div>
+                  <div className="flex-1">Symbol</div>
+                </div>
                 {table.length ? (
-                  <>
-                    Amounts
-                    <div className="mb-4">
-                      {table.map((x) => (
-                        <div key={x.mintPubKey.toBase58()}>
-                          <div>{x.mintPubKey.toBase58()}</div>
-                          <div>
-                            {mintsForAvailableAmounts[x.mintPubKey.toBase58()]
-                              ? toDecimalAmount(
-                                  x.nativeAmount,
-                                  mintsForAvailableAmounts[
-                                    x.mintPubKey.toBase58()
-                                  ].decimals
-                                )
-                              : null}
-                          </div>
-                          <div>
-                            {
-                              mintsForAvailableAmounts[x.mintPubKey.toBase58()]
-                                ?.symbol
-                            }
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
+                  <div className="space-y-3">
+                    {table.map((x) => (
+                      <TableRow
+                        mintsForAvailableAmounts={mintsForAvailableAmounts}
+                        item={x}
+                      ></TableRow>
+                    ))}
+                  </div>
                 ) : (
                   <div className="flex flex-row">
                     <CurrencyDollarIcon className="mr-3 w-5"></CurrencyDollarIcon>{" "}
@@ -363,7 +352,7 @@ const MainPage = () => {
             )}
           </div>
 
-          <div className="flex justify-end space-x-4">
+          <div className="mt-12 flex justify-end space-x-4">
             <Button
               onClick={() => handleReimbursement(false)}
               disabled={transferLoading || !table.length}
@@ -388,6 +377,38 @@ const MainPage = () => {
           wallet
         </div>
       )}
+    </div>
+  );
+};
+
+const TableRow = ({
+  mintsForAvailableAmounts,
+  item,
+}: {
+  mintsForAvailableAmounts: { [key: string]: MintInfo };
+  item: TableInfo;
+}) => {
+  const mintPk = item.mintPubKey;
+  const symbol = mintsForAvailableAmounts[mintPk.toBase58()]?.symbol;
+  const mintInfo = mintsForAvailableAmounts[mintPk.toBase58()];
+  return (
+    <div
+      className="flex items-center space-x-3 text-xs"
+      key={mintPk.toBase58()}
+    >
+      <div className="w-8">
+        <img
+          className="w-5"
+          src={`assets/icons/${symbol.toLocaleLowerCase()}.svg`}
+        ></img>
+      </div>
+      <div className="flex-1">{abbreviateAddress(mintPk)}</div>
+      <div className="flex-1">
+        {mintInfo
+          ? toDecimalAmount(item.nativeAmount, mintInfo.decimals)
+          : null}
+      </div>
+      <div className="flex-1">{symbol}</div>
     </div>
   );
 };
