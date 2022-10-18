@@ -366,7 +366,7 @@ const MainPage = () => {
               {claimTransferLoading ? (
                 <Loading></Loading>
               ) : (
-                "Claim and transfer claim to dao"
+                "Claim tokens and transfer legal claims to dao"
               )}
             </Button>
           </div>
