@@ -337,6 +337,7 @@ const MainPage = () => {
                   <div className="space-y-3">
                     {table.map((x) => (
                       <TableRow
+                        key={x.mintPubKey.toBase58()}
                         mintsForAvailableAmounts={mintsForAvailableAmounts}
                         item={x}
                       ></TableRow>
@@ -392,10 +393,7 @@ const TableRow = ({
   const symbol = mintsForAvailableAmounts[mintPk.toBase58()]?.symbol;
   const mintInfo = mintsForAvailableAmounts[mintPk.toBase58()];
   return (
-    <div
-      className="flex items-center space-x-3 text-xs"
-      key={mintPk.toBase58()}
-    >
+    <div className="flex items-center space-x-3 text-xs">
       <div className="w-8">
         <img
           className="w-5"

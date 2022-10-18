@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@blockworks-foundation/mango-client": "^3.6.19",
-    "@blockworks-foundation/mango-v3-reimbursement-lib": "^1.0.1",
+    "@blockworks-foundation/mango-v3-reimbursement-lib": "^1.0.3",
     "@blockworks-foundation/mangolana": "^0.0.1-beta.4",
     "@headlessui/react": "^0.0.0-insiders.2dbc38c",
     "@heroicons/react": "^1.0.0",
