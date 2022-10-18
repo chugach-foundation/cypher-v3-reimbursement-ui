@@ -1,5 +1,5 @@
 import create, { State } from "zustand";
-import { MangoV3ReimbursementClient } from "mango_v3_reimbursement_lib/dist/client";
+import { MangoV3ReimbursementClient } from "@blockworks-foundation/mango-v3-reimbursement-lib/dist/client";
 import { Connection } from "@solana/web3.js";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { AnchorProvider } from "@project-serum/anchor";
