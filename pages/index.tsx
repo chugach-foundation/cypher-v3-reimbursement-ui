@@ -372,11 +372,11 @@ const MainPage = () => {
             </div>
             {!amountsLoading && (
               <div>
-                <div className="mb-2 flex space-x-3 border-b border-th-bkg-3 pb-2">
-                  <div className="w-8"></div>
-                  <div className="flex-1">Token</div>
-                  <div className="flex-2">Amount to claim</div>
-                  <div className="flex-2">Claimed</div>
+                <div className="mb-2 grid grid-cols-12 gap-3 border-b border-th-bkg-3 pb-2">
+                  <div className="col-span-1"></div>
+                  <div className="col-span-7">Token</div>
+                  <div className="col-span-2">Amount</div>
+                  <div className="col-span-2">Claimed</div>
                 </div>
                 {table.length ? (
                   <div className="space-y-3">
@@ -400,10 +400,10 @@ const MainPage = () => {
           </div>
         ) : (
           <div className="border border-th-bkg-3 p-4">
-            <div className="mb-2 flex space-x-3 border-b border-th-bkg-3 pb-2">
-              <div className="w-8"></div>
-              <div className="flex-1">Token</div>
-              <div className="flex-1">Amount to claim</div>
+            <div className="mb-2 grid grid-cols-12 border-b border-th-bkg-3 pb-2">
+              <div className="col-span-1"></div>
+              <div className="col-span-7">Token</div>
+              <div className="col-span-2">Amount</div>
             </div>
             <div className="space-y-3">
               <EmptyTableRows />
@@ -411,7 +411,7 @@ const MainPage = () => {
           </div>
         )}
 
-        <div className="mt-12 flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 pt-12">
           <Button
             onClick={() => handleReimbursement(false)}
             disabled={transferLoading || !table.length}
@@ -463,24 +463,24 @@ const TableRow = ({
     }
   }, [reimbursementClient !== null]);
   return (
-    <div className="flex items-center space-x-3 text-xs">
-      <div className="w-8">
+    <div className="grid grid-cols-12 items-center gap-3 text-xs">
+      <div className="col-span-1">
         <img
           className="w-5"
           src={`assets/icons/${symbol.toLocaleLowerCase()}.svg`}
         ></img>
       </div>
-      <div className="flex flex-1 flex-col">
+      <div className="col-span-7 flex flex-col overflow-hidden">
         <div className="">{symbol}</div>
-        <div>{mintPk.toString()}</div>
+        <div>{mintPk.toBase58()}</div>
       </div>
 
-      <div className="flex-2">
+      <div className="col-span-2">
         {mintInfo
           ? toDecimalAmount(item.nativeAmount, mintInfo.decimals)
           : null}
       </div>
-      <div className="flex-2">
+      <div className="col-span-2">
         {isClaimed ? (
           <CheckIcon className="w-5"></CheckIcon>
         ) : (
@@ -511,15 +511,15 @@ const EmptyTableRows = () => {
     <>
       {TOKENS.map((x) => {
         return (
-          <div key={x} className="flex items-center space-x-3 text-xs">
-            <div className="w-8">
+          <div key={x} className="grid grid-cols-12 items-center gap-3 text-xs">
+            <div className="col-span-1">
               <img
                 className="w-5"
                 src={`assets/icons/${x.toLocaleLowerCase()}.svg`}
               ></img>
             </div>
-            <div className="flex-2">{x}</div>
-            <div className="flex-2">-</div>
+            <div className="col-span-7">{x}</div>
+            <div className="col-span-2">-</div>
           </div>
         );
       })}
