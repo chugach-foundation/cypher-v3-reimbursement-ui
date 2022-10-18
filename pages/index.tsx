@@ -263,7 +263,7 @@ const MainPage = () => {
 
   return (
     <div className="flex min-h-[400px] flex-col items-center p-4 pt-[50px]">
-      <div className="flex w-2/3 flex-col space-y-4">
+      <div className="flex w-2/3 flex-col space-y-4 lg:w-1/2">
         <h2>Mango V3 Claim Funds</h2>
         <div>On this interface you can redeem your Mango V3 protocol funds.</div>
         <div>
