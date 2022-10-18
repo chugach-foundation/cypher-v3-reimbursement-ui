@@ -264,6 +264,12 @@ const MainPage = () => {
   return (
     <div className="flex min-h-[400px] flex-col items-center p-4 pt-[50px]">
       <div className="flex w-2/3 flex-col space-y-4">
+        <h2>Mango V3 Claim Funds</h2>
+        <div>On this interface you can redeem your Mango V3 protocol funds.</div>
+        <div>
+          Mango has secured funds for users to redeem a settlement amount. You can connect your funds to see the amounts
+          available for all mango accounts owned by the connected wallet.
+        </div>
         <h3>Connected wallet</h3>
         <div className="border border-th-bkg-3 p-4">
           <div className="flex items-center text-xs">
