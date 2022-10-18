@@ -265,12 +265,12 @@ const MainPage = () => {
     <div className="flex min-h-[400px] flex-col items-center p-4 pt-[50px]">
       <div className="flex w-2/3 flex-col space-y-4 lg:w-1/2">
         <h2>Mango V3 Claim Funds</h2>
-        <div>On this interface you can redeem your Mango V3 protocol funds.</div>
-        <div>
+        <div className="text-th-fgd-3">On this interface you can redeem your Mango V3 protocol funds.</div>
+        <div className="text-th-fgd-3">
           Mango has secured funds for users to redeem a settlement amount. You can connect your funds to see the amounts
           available for all mango accounts owned by the connected wallet.
         </div>
-        <h3>Connected wallet</h3>
+        <h3 className="">Connected wallet</h3>
         <div className="border border-th-bkg-3 p-4">
           <div className="flex items-center text-xs">
             {wallet.connected ? (
@@ -293,8 +293,7 @@ const MainPage = () => {
               <div>
                 <div className="mb-2 flex space-x-3 border-b border-th-bkg-3 pb-2">
                   <div className="w-8"></div>
-                  <div className="flex-1">Mint</div>
-                  <div className="flex-1">Symbol</div>
+                  <div className="flex-1">Token</div>
                   <div className="flex-1">Amount to claim</div>
                 </div>
                 {table.length ? (
@@ -320,8 +319,7 @@ const MainPage = () => {
           <div className="border border-th-bkg-3 p-4">
             <div className="mb-2 flex space-x-3 border-b border-th-bkg-3 pb-2">
               <div className="w-8"></div>
-              <div className="flex-1">Mint</div>
-              <div className="flex-1">Symbol</div>
+              <div className="flex-1">Token</div>
               <div className="flex-1">Amount to claim</div>
             </div>
             <div className="space-y-3">
@@ -358,8 +356,11 @@ const TableRow = ({
       <div className="w-8">
         <img className="w-5" src={`assets/icons/${symbol.toLocaleLowerCase()}.svg`}></img>
       </div>
-      <div className="flex-1">{abbreviateAddress(mintPk)}</div>
-      <div className="flex-1">{symbol}</div>
+      <div className="flex flex-1 flex-col">
+        <div className="">{symbol}</div>
+        <div>{mintPk.toString()}</div>
+      </div>
+
       <div className="flex-1">{mintInfo ? toDecimalAmount(item.nativeAmount, mintInfo.decimals) : null}</div>
     </div>
   )
@@ -375,7 +376,6 @@ const EmptyTableRows = () => {
             <div className="w-8">
               <img className="w-5" src={`assets/icons/${x.toLocaleLowerCase()}.svg`}></img>
             </div>
-            <div className="flex-1"></div>
             <div className="flex-1">{x}</div>
             <div className="flex-1">-</div>
           </div>
