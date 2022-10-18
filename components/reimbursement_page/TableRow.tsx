@@ -32,7 +32,10 @@ const TableRow = ({
     } else {
       setIsClaimed(false);
     }
-  }, [reimbursementClient !== null]);
+  }, [
+    reimbursementClient !== null,
+    reimbursementAccount && JSON.stringify(reimbursementAccount),
+  ]);
   return (
     <div className="grid grid-cols-12 items-center gap-3 text-xs">
       <div className="col-span-1">

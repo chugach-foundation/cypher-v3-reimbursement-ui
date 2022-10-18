@@ -1063,10 +1063,10 @@
     toformat "^2.0.0"
     yargs "^17.0.1"
 
-"@blockworks-foundation/mango-v3-reimbursement-lib@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@blockworks-foundation/mango-v3-reimbursement-lib/-/mango-v3-reimbursement-lib-1.0.5.tgz#51e2d0c4a9d2887c56a56dddf316d1f3dc634d9b"
-  integrity sha512-/1qbKwDEz0schyM0vlyFujbn/JoAJViUjOLjtdQkNhyrAyESljdY53n6Avb030Bys6YV9g4sLziwv9quvkVRUQ==
+"@blockworks-foundation/mango-v3-reimbursement-lib@^1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@blockworks-foundation/mango-v3-reimbursement-lib/-/mango-v3-reimbursement-lib-1.0.6.tgz#77f8ba90fcde02c00268fc92933f0c95bef8cb94"
+  integrity sha512-4sAYW/4MHu1SThju7l0otbwHnS3whLzzoCYscJKnYFeK8CkP+6gS2ujaWDGhIvLQ5Ph2OTXoJhtiU4KSh/Q7Sw==
   dependencies:
     "@blockworks-foundation/mango-client" "^3.6.20"
     "@project-serum/anchor" "^0.25.0"

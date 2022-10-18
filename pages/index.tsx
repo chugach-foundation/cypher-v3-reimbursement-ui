@@ -12,7 +12,10 @@ import {
   tryDecodeTable,
   tryGetReimbursedAccounts,
 } from "utils/tools";
-import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions";
+import {
+  TOKEN_PROGRAM_ID,
+  transfer,
+} from "@project-serum/serum/lib/token-instructions";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions";
 import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes";
@@ -28,6 +31,7 @@ import {
   ReimbursementAccount,
   TableInfo,
 } from "components/reimbursement_page/types";
+import Checkbox from "components/Checkbox";
 
 const GROUP_NUM = 20;
 
@@ -59,17 +63,44 @@ const MainPage = () => {
   const [table, setTable] = useState<TableInfo[]>([]);
   const [amountsLoading, setAmountsLoading] = useState(false);
   const [transferLoading, setTransferLoading] = useState(false);
-  const [claimTransferLoading, setClaimTransferLoading] = useState(false);
   const [reimbursementAccount, setReimbursementAccount] =
     useState<ReimbursementAccount | null>(null);
+  const [transferClaim, setTransferClaim] = useState(false);
+  const hasClaimedAll =
+    reimbursementAccount !== null &&
+    reimbursementAccount.claimTransferred === reimbursementAccount.reimbursed;
 
+  const resetAmountState = () => {
+    setMintsForAvailableAmounts({});
+    setTable([]);
+    setReimbursementAccount(null);
+  };
+  const getReimbursementAccount = async (group) => {
+    const reimbursementAccount = (
+      await PublicKey.findProgramAddress(
+        [
+          Buffer.from("ReimbursementAccount"),
+          group!.publicKey.toBuffer()!,
+          wallet!.publicKey!.toBuffer(),
+        ],
+        reimbursementClient!.program.programId
+      )
+    )[0];
+    const ra = await tryGetReimbursedAccounts(
+      reimbursementClient,
+      reimbursementAccount
+    );
+    setReimbursementAccount(ra);
+  };
+  const getCurrentGroup = async () => {
+    const result = await reimbursementClient!.program.account.group.all();
+    const group = result.find((group) => group.account.groupNum === GROUP_NUM);
+    return group;
+  };
   const getAccountAmountsInfo = async (walletPk: PublicKey) => {
     setAmountsLoading(true);
     try {
-      const result = await reimbursementClient!.program.account.group.all();
-      const group = result.find(
-        (group) => group.account.groupNum === GROUP_NUM
-      );
+      const group = await getCurrentGroup();
       const config = Config.ids();
       const groupIds = config.getGroup(connection.cluster, groupName.name);
 
@@ -78,20 +109,6 @@ const MainPage = () => {
         row.owner.equals(wallet.publicKey)
       ).balances;
       if (balancesForUser) {
-        const reimbursementAccount = (
-          await PublicKey.findProgramAddress(
-            [
-              Buffer.from("ReimbursementAccount"),
-              group!.publicKey.toBuffer()!,
-              wallet!.publicKey!.toBuffer(),
-            ],
-            reimbursementClient!.program.programId
-          )
-        )[0];
-        const ra = await tryGetReimbursedAccounts(
-          reimbursementClient,
-          reimbursementAccount
-        );
         const indexesToUse: number[] = [];
         for (let i in balancesForUser) {
           const isZero = balancesForUser[i].isZero();
@@ -124,7 +141,7 @@ const MainPage = () => {
         }
         setMintsForAvailableAmounts(mintInfos);
         setTable(tableInfo);
-        setReimbursementAccount(ra);
+        await getReimbursementAccount(group);
       } else {
         resetAmountState();
       }
@@ -136,11 +153,6 @@ const MainPage = () => {
       });
     }
     setAmountsLoading(false);
-  };
-  const resetAmountState = () => {
-    setMintsForAvailableAmounts({});
-    setTable([]);
-    setReimbursementAccount(null);
   };
 
   const getReimbursementAccountInstructions = async (
@@ -242,16 +254,9 @@ const MainPage = () => {
     return instructions;
   };
   const handleReimbursement = async (transferClaim: boolean) => {
-    if (transferClaim) {
-      setClaimTransferLoading(true);
-    } else {
-      setTransferLoading(true);
-    }
+    setTransferLoading(true);
     try {
-      const result = await reimbursementClient!.program.account.group.all();
-      const group = result.find(
-        (group) => group.account.groupNum === GROUP_NUM
-      );
+      const group = await getCurrentGroup();
       const reimbursementAccount = (
         await PublicKey.findProgramAddress(
           [
@@ -296,6 +301,7 @@ const MainPage = () => {
         wallet,
         transactionInstructions: instructionsToSend,
       });
+      getReimbursementAccount(group);
       notify({
         title: "Successful reimbursement",
         type: "success",
@@ -308,11 +314,7 @@ const MainPage = () => {
         type: "error",
       });
     }
-    if (transferClaim) {
-      setClaimTransferLoading(false);
-    } else {
-      setTransferLoading(false);
-    }
+    setTransferLoading(false);
   };
 
   useEffect(() => {
@@ -400,22 +402,24 @@ const MainPage = () => {
           </div>
         )}
 
-        <div className="flex justify-end space-x-4 pt-12">
+        <div className="flex flex-col justify-end space-x-4 pt-10">
+          <div className="mb-4 flex flex-col items-end">
+            {wallet.connected && (
+              <Checkbox
+                disabled={transferLoading || !table.length || hasClaimedAll}
+                checked={transferClaim}
+                onChange={(e) => setTransferClaim(e.target.checked)}
+              >
+                Transfer legal claim to dao
+              </Checkbox>
+            )}
+          </div>
+
           <Button
-            onClick={() => handleReimbursement(false)}
-            disabled={transferLoading || !table.length}
+            onClick={() => handleReimbursement(transferClaim)}
+            disabled={transferLoading || !table.length || hasClaimedAll}
           >
             {transferLoading ? <Loading></Loading> : "Claim tokens"}
-          </Button>
-          <Button
-            disabled={claimTransferLoading || !table.length}
-            onClick={() => handleReimbursement(true)}
-          >
-            {claimTransferLoading ? (
-              <Loading></Loading>
-            ) : (
-              "Claim tokens and transfer legal claims to dao"
-            )}
           </Button>
         </div>
       </div>
