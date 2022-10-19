@@ -426,10 +426,10 @@ const MainPage = () => {
                 {abbreviateAddress(wallet.publicKey!)}
               </div>
             </div>
-            {mangoAccounts?.length ? (
+            {mangoAccounts?.length && table.length ? (
               <div className="flex flex-col pb-4 pt-1">
                 <h3 className="mr-3">Mango Accounts:</h3>
-                <div className="mt-2 flex flex-col">
+                <div className="mt-2 flex flex-wrap">
                   {mangoAccounts.map((mangoAccount) => {
                     return (
                       <div className="pl-8 text-xs text-th-fgd-4">
