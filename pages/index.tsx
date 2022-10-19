@@ -418,29 +418,52 @@ const MainPage = () => {
               <EmptyTableRows />
             </div>
           </div>
-        )}{" "}
-        <div className="flex flex-col justify-end space-x-4 pt-10">
-          <div className="mb-4 flex flex-col items-end">
-            {wallet.connected && (
-              <Checkbox
-                disabled={transferLoading || !table.length || hasClaimedAll}
-                checked={transferClaim}
-                onChange={(e) => setTransferClaim(e.target.checked)}
-              >
-                Transfer legal claim to dao
-              </Checkbox>
-            )}
-          </div>
+        )}
 
-          <Button
-            onClick={() => handleReimbursement(transferClaim)}
-            disabled={transferLoading || !table.length || hasClaimedAll}
-          >
-            {transferLoading ? <Loading></Loading> : "Claim tokens"}
-          </Button>
+        <div className="flex flex-col justify-end space-x-4 pt-4">
+          <div className="flex justify-center">
+            <Button
+              onClick={() => handleReimbursement(transferClaim)}
+              disabled={transferLoading || !table.length || hasClaimedAll}
+              className="px-14 py-3 text-base"
+            >
+              {transferLoading ? <Loading></Loading> : "Claim tokens"}
+            </Button>
+          </div>
+          <div className="mt-6 flex flex-col">
+            {/* {wallet.connected && (
+              // <Checkbox
+              //   disabled={transferLoading || !table.length || hasClaimedAll}
+              //   checked={transferClaim}
+              //   onChange={(e) => setTransferClaim(e.target.checked)}
+              // >
+              //   Transfer legal claim to dao
+              // </Checkbox>
+            )} */}
+            {wallet.connected && table.length ? (
+              <div className="text-xs text-th-fgd-3">
+                By clicking and accepting the funds . . ., I hereby irrevocably
+                sell, convey, transfer and assign to Mango Labs, LLC all of my
+                right, title and interest in, to and under all claims arising
+                out of or related to the loss of my tokens in the October 2022
+                incident, including, without limitation, all of my causes of
+                action or other rights with respect to such claims, all rights
+                to receive any amounts or property or other distribution in
+                respect of or in connection with such claims, and any and all
+                proceeds of any of the foregoing (including proceeds of
+                proceeds). I further irrevocably and unconditionally release all
+                claims I may have against Mango Labs, LLC, the Mango
+                Decentralized Autonomous Entity, its core contributors, and any
+                of their agents, affiliates, officers, employees, or principals
+                related to this matter. This release constitutes an express,
+                informed, knowing and voluntary waiver and relinquishment to the
+                fullest extent permitted by law.
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
     </div>
+  </div>
   );
 };
 
