@@ -345,7 +345,7 @@ const MainPage = () => {
 
   return (
     <div className="flex min-h-[400px] flex-col items-center p-4 pb-10 pt-[50px]">
-      <div className="flex w-2/3 flex-col lg:w-1/2">
+      <div className="flex w-4/5 flex-col sm:w-2/3 xl:w-1/2">
         <h1 className="mb-3">Mango v3 Exploit Refund</h1>
         <p className="text-base text-th-fgd-2">
           Claim your lost funds as approved by the{" "}
@@ -458,7 +458,7 @@ const MainPage = () => {
               </div>
             ) : null}
           </div>
-          <div className="mt-6 flex justify-center">
+          <div className="mt-8 flex justify-center">
             {isAgreementModalOpen && (
               <AgreementModal
                 isOpen={isAgreementModalOpen}

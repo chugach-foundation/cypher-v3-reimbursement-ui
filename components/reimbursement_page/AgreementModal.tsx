@@ -13,17 +13,20 @@ const AgreementModal = ({
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <Modal.Header>
+      {/* <Modal.Header>
         <ElementTitle noMarginBottom>Agreement</ElementTitle>
-      </Modal.Header>
+      </Modal.Header> */}
       <div className="space-y-2">
         <div className="flex items-center justify-center pb-4 text-th-fgd-3">
-          Lorem ipsum
+          By clicking “I Agree” and claiming these tokens, I understand and
+          manifest my assent and agreement to be bound by this enforceable
+          contract, and agree that all claims under this agreement will be
+          resolved exclusively under the laws of the State of New York.
         </div>
       </div>
       <div className="flex justify-center">
-        <Button className="mt-6" onClick={onAggree}>
-          I agree
+        <Button className="mt-2 px-8" onClick={onAggree}>
+          I Agree
         </Button>
       </div>
     </Modal>
