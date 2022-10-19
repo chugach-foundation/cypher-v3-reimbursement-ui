@@ -348,7 +348,7 @@ const MainPage = () => {
       <div className="flex w-4/5 flex-col sm:w-2/3 xl:w-1/2">
         <h1 className="mb-3">Mango v3 Exploit Refund</h1>
         <p className="text-base text-th-fgd-2">
-          Claim your lost funds as approved by the{" "}
+          Claim your lost tokens as approved by the{" "}
           <a
             href="https://app.realms.today/dao/MNGO/proposal/HRR4ydbGUYYTCUgr7KvKdWW87HzCQy9Fu6aL8X5BMFUT"
             target="_blank"
@@ -438,7 +438,7 @@ const MainPage = () => {
                   DAO.
                 </div>
                 <div className="mt-4">
-                  By clicking and accepting the funds . . ., I hereby
+                  By clicking and accepting the tokens . . ., I hereby
                   irrevocably sell, convey, transfer and assign to Mango Labs,
                   LLC all of my right, title and interest in, to and under all
                   claims arising out of or related to the loss of my tokens in
@@ -471,7 +471,7 @@ const MainPage = () => {
               disabled={transferLoading || !table.length || hasClaimedAll}
               className="px-14 py-3 text-base"
             >
-              {transferLoading ? <Loading></Loading> : "Claim Refund"}
+              {transferLoading ? <Loading></Loading> : "Claim Tokens"}
             </Button>
           </div>
         </div>
