@@ -4,27 +4,16 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { BN } from "@project-serum/anchor";
 import useMangoStore from "stores/useMangoStore";
 import useReimbursementStore from "stores/useReimbursementStore";
-import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import Button from "components/Button";
 import {
   chunks,
-  createSyncNativeInstruction,
   isExistingTokenAccount,
   tryDecodeTable,
   tryGetReimbursedAccounts,
   WSOL_MINT_PK,
 } from "utils/tools";
-import {
-  initializeAccount,
-  TOKEN_PROGRAM_ID,
-  transfer,
-  WRAPPED_SOL_MINT,
-} from "@project-serum/serum/lib/token-instructions";
+import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions";
 import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes";
@@ -193,6 +182,7 @@ const MainPage = () => {
   ) => {
     const instructions: TransactionInstruction[] = [];
     const owner = wallet.publicKey!;
+    const table = await tryDecodeTable(reimbursementClient, group);
     for (const availableMintPk of Object.keys(mintsForAvailableAmounts)) {
       const mintIndex = group?.account.mints.findIndex(
         (x) => x.toBase58() === availableMintPk
@@ -200,7 +190,6 @@ const MainPage = () => {
       const mintPk = group?.account.mints[mintIndex];
       const claimMintPk = group?.account.claimMints[mintIndex];
       const isWSolMint = mintPk.toBase58() === WSOL_MINT_PK.toBase58();
-      const table = await tryDecodeTable(reimbursementClient, group);
       const tableIndex = table.findIndex((row) =>
         row.owner.equals(wallet.publicKey)
       );
@@ -209,13 +198,22 @@ const MainPage = () => {
         : false;
 
       if (!isTokenClaimed) {
-        const ataPk = await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-          mintPk, // mint
-          owner, // owner
-          true
-        );
+        const [ataPk, daoAtaPk] = await Promise.all([
+          Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+            TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+            mintPk, // mint
+            owner, // owner
+            true
+          ),
+          Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+            TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+            claimMintPk,
+            group?.account.claimTransferDestination!,
+            true
+          ),
+        ]);
 
         const isExistingAta = await isExistingTokenAccount(
           connection.current,
@@ -234,13 +232,6 @@ const MainPage = () => {
           );
         }
 
-        const daoAtaPk = await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-          claimMintPk,
-          group?.account.claimTransferDestination!,
-          true
-        );
         instructions.push(
           await reimbursementClient!.program.methods
             .reimburse(new BN(mintIndex), new BN(tableIndex), transferClaim)
