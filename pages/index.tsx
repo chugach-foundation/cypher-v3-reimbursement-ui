@@ -42,7 +42,7 @@ import {
 } from "components/reimbursement_page/types";
 import Checkbox from "components/Checkbox";
 
-const GROUP_NUM = 20;
+const GROUP_NUM = 32;
 
 export async function getStaticProps({ locale }) {
   return {
@@ -77,6 +77,8 @@ const MainPage = () => {
   const [transferClaim, setTransferClaim] = useState(false);
   const hasClaimedAll =
     reimbursementAccount !== null &&
+    reimbursementAccount.reimbursed !== 0 &&
+    reimbursementAccount.claimTransferred !== 0 &&
     reimbursementAccount.claimTransferred === reimbursementAccount.reimbursed;
 
   const resetAmountState = () => {
@@ -186,7 +188,7 @@ const MainPage = () => {
   };
   const getReimbursementInstructions = async (
     group: any,
-    reimbursementAccount: PublicKey,
+    reimbursementAccountPk: PublicKey,
     transferClaim: boolean
   ) => {
     const instructions: TransactionInstruction[] = [];
@@ -198,101 +200,73 @@ const MainPage = () => {
       const mintPk = group?.account.mints[mintIndex];
       const claimMintPk = group?.account.claimMints[mintIndex];
       const isWSolMint = mintPk.toBase58() === WSOL_MINT_PK.toBase58();
-
-      let ataPk = PublicKey.default;
-      //   if (isWSolMint) {
-      //     const keypair = new Keypair();
-      //     ataPk = keypair.publicKey;
-      //     const space = 165;
-      //     const rent = await connection.current.getMinimumBalanceForRentExemption(
-      //       space,
-      //       "processed"
-      //     );
-
-      //     instructions.push(
-      //       SystemProgram.createAccount({
-      //         fromPubkey: wallet.publicKey!,
-      //         newAccountPubkey: keypair?.publicKey,
-      //         lamports: rent,
-      //         space: space,
-      //         programId: TOKEN_PROGRAM_ID,
-      //       }),
-      //       initializeAccount({
-      //         account: keypair?.publicKey,
-      //         mint: WRAPPED_SOL_MINT,
-      //         owner: wallet.publicKey!,
-      //       })
-      //     );
-      //   }
-      // if (!isWSolMint) {
-      ataPk = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-        mintPk, // mint
-        owner, // owner
-        true
+      const table = await tryDecodeTable(reimbursementClient, group);
+      const tableIndex = table.findIndex((row) =>
+        row.owner.equals(wallet.publicKey)
       );
-      const isExistingAta = await isExistingTokenAccount(
-        connection.current,
-        ataPk
-      );
-      if (!isExistingAta) {
-        instructions.push(
-          Token.createAssociatedTokenAccountInstruction(
-            ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-            TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-            mintPk, // mint
-            ataPk, // ata
-            owner, // owner of token account
-            owner // fee payer
-          )
+      const isTokenClaimed = reimbursementAccount
+        ? await reimbursementClient!.reimbursed(reimbursementAccount, mintIndex)
+        : false;
+
+      if (!isTokenClaimed) {
+        const ataPk = await Token.getAssociatedTokenAddress(
+          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+          mintPk, // mint
+          owner, // owner
+          true
         );
-      }
-      //}
 
-      const daoAtaPk = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-        claimMintPk,
-        group?.account.claimTransferDestination!,
-        true
-      );
-      const isExistingDaoAta = await isExistingTokenAccount(
-        connection.current,
-        daoAtaPk
-      );
-      if (!isExistingDaoAta) {
-        instructions.push(
-          Token.createAssociatedTokenAccountInstruction(
-            ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-            TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-            claimMintPk, // mint
-            daoAtaPk, // ata
-            group?.account.claimTransferDestination, // owner of token account
-            owner // fee payer
-          )
+        const isExistingAta = await isExistingTokenAccount(
+          connection.current,
+          ataPk
         );
+        if (!isExistingAta) {
+          instructions.push(
+            Token.createAssociatedTokenAccountInstruction(
+              ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+              TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+              mintPk, // mint
+              ataPk, // ata
+              owner, // owner of token account
+              owner // fee payer
+            )
+          );
+        }
+
+        const daoAtaPk = await Token.getAssociatedTokenAddress(
+          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+          claimMintPk,
+          group?.account.claimTransferDestination!,
+          true
+        );
+        instructions.push(
+          await reimbursementClient!.program.methods
+            .reimburse(new BN(mintIndex), new BN(tableIndex), transferClaim)
+            .accounts({
+              group: (group as any).publicKey,
+              vault: group?.account.vaults[mintIndex],
+              tokenAccount: ataPk,
+              claimMint: claimMintPk,
+              claimMintTokenAccount: daoAtaPk,
+              reimbursementAccount: reimbursementAccountPk,
+              mangoAccountOwner: wallet.publicKey!,
+              table: group?.account.table,
+            })
+            .instruction()
+        );
+        if (isWSolMint) {
+          const unwrapAllSol = Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            ataPk!,
+            wallet.publicKey!,
+            wallet.publicKey!,
+            []
+          );
+          instructions.push(unwrapAllSol);
+        }
       }
-      instructions.push(
-        await reimbursementClient!.program.methods
-          .reimburse(new BN(mintIndex), new BN(mintIndex), transferClaim)
-          .accounts({
-            group: (group as any).publicKey,
-            vault: group?.account.vaults[mintIndex],
-            tokenAccount: ataPk,
-            claimMint: claimMintPk,
-            //rename for that if we use msol acc
-            claimMintTokenAccount: daoAtaPk,
-            reimbursementAccount,
-            mangoAccountOwner: wallet.publicKey!,
-            table: group?.account.table,
-          })
-          .instruction()
-      );
-      //   if (isWSolMint) {
-      //     const syncIx = createSyncNativeInstruction(ataPk!);
-      //     instructions.push(syncIx);
-      //   }
     }
 
     return instructions;
@@ -444,8 +418,7 @@ const MainPage = () => {
               <EmptyTableRows />
             </div>
           </div>
-        )}
-
+        )}{" "}
         <div className="flex flex-col justify-end space-x-4 pt-10">
           <div className="mb-4 flex flex-col items-end">
             {wallet.connected && (

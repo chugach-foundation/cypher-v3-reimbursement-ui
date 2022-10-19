@@ -10,7 +10,8 @@ export async function isExistingTokenAccount(
   try {
     const account = await connection.getParsedAccountInfo(publicKey);
     //TODO find way to validate account without sols
-    if (!account) {
+
+    if (!account?.value) {
       throw "Account doesn't exist or has no SOLs";
     }
     return true;
