@@ -455,7 +455,10 @@ const MainPage = () => {
             </div>
             {mangoAccounts?.length && table.length ? (
               <div className="col-span-2 pb-4 md:col-span-1">
-                <h3>{mangoAccounts.length} Mango Accounts:</h3>
+                <h3>
+                  {mangoAccounts.length} Mango Account
+                  {mangoAccounts.length === 1 ? "" : "s"}:
+                </h3>
                 <div className="flex flex-wrap">
                   {mangoAccounts.map((mangoAccount) => {
                     return (
