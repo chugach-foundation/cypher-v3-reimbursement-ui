@@ -537,7 +537,7 @@ const MainPage = () => {
                   DAO.
                 </div>
                 <div className="mt-4">
-                  By clicking and accepting the tokens . . ., I hereby
+                  By clicking and accepting the tokens, I hereby
                   irrevocably sell, convey, transfer and assign to Mango Labs,
                   LLC all of my right, title and interest in, to and under all
                   claims arising out of or related to the loss of my tokens in
