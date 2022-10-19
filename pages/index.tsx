@@ -4,27 +4,16 @@ import { useWallet } from "@solana/wallet-adapter-react"
 import { BN } from "@project-serum/anchor"
 import useMangoStore from "stores/useMangoStore"
 import useReimbursementStore from "stores/useReimbursementStore"
-import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from "@solana/web3.js"
+import { PublicKey, TransactionInstruction } from "@solana/web3.js"
 import Button from "components/Button"
 import {
   chunks,
-  createSyncNativeInstruction,
   isExistingTokenAccount,
   tryDecodeTable,
   tryGetReimbursedAccounts,
   WSOL_MINT_PK,
 } from "utils/tools"
-import {
-  initializeAccount,
-  TOKEN_PROGRAM_ID,
-  transfer,
-  WRAPPED_SOL_MINT,
-} from "@project-serum/serum/lib/token-instructions"
+import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions"
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token"
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions"
 import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes"
@@ -32,7 +21,10 @@ import { Config } from "@blockworks-foundation/mango-client"
 import { notify } from "utils/notifications"
 import Loading from "components/Loading"
 import { WalletIcon } from "components"
-import { CurrencyDollarIcon } from "@heroicons/react/solid"
+import {
+  CurrencyDollarIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/solid"
 import TableRow from "components/reimbursement_page/TableRow"
 import EmptyTableRows from "components/reimbursement_page/EmptyRow"
 import {
@@ -42,6 +34,7 @@ import {
 } from "components/reimbursement_page/types"
 import Checkbox from "components/Checkbox"
 import { abbreviateAddress } from "utils"
+import AgreementModal from "components/reimbursement_page/AgreementModal"
 
 const GROUP_NUM = 32
 
@@ -70,6 +63,7 @@ const MainPage = () => {
   const [mintsForAvailableAmounts, setMintsForAvailableAmounts] = useState<{
     [key: string]: MintInfo
   }>({})
+  const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false)
   const [table, setTable] = useState<TableInfo[]>([])
   const [amountsLoading, setAmountsLoading] = useState(false)
   const [transferLoading, setTransferLoading] = useState(false)
@@ -194,6 +188,7 @@ const MainPage = () => {
   ) => {
     const instructions: TransactionInstruction[] = []
     const owner = wallet.publicKey!
+    const table = await tryDecodeTable(reimbursementClient, group)
     for (const availableMintPk of Object.keys(mintsForAvailableAmounts)) {
       const mintIndex = group?.account.mints.findIndex(
         (x) => x.toBase58() === availableMintPk
@@ -201,7 +196,6 @@ const MainPage = () => {
       const mintPk = group?.account.mints[mintIndex]
       const claimMintPk = group?.account.claimMints[mintIndex]
       const isWSolMint = mintPk.toBase58() === WSOL_MINT_PK.toBase58()
-      const table = await tryDecodeTable(reimbursementClient, group)
       const tableIndex = table.findIndex((row) =>
         row.owner.equals(wallet.publicKey)
       )
@@ -210,13 +204,22 @@ const MainPage = () => {
         : false
 
       if (!isTokenClaimed) {
-        const ataPk = await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-          mintPk, // mint
-          owner, // owner
-          true
-        )
+        const [ataPk, daoAtaPk] = await Promise.all([
+          Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+            TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+            mintPk, // mint
+            owner, // owner
+            true
+          ),
+          Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
+            TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+            claimMintPk,
+            group?.account.claimTransferDestination!,
+            true
+          ),
+        ])
 
         const isExistingAta = await isExistingTokenAccount(
           connection.current,
@@ -235,13 +238,6 @@ const MainPage = () => {
           )
         }
 
-        const daoAtaPk = await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-          TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-          claimMintPk,
-          group?.account.claimTransferDestination!,
-          true
-        )
         instructions.push(
           await reimbursementClient!.program.methods
             .reimburse(new BN(mintIndex), new BN(tableIndex), transferClaim)
@@ -321,6 +317,7 @@ const MainPage = () => {
         transactionInstructions: instructionsToSend,
       })
       getReimbursementAccount(group)
+      setIsAgreementModalOpen(false)
       notify({
         title: "Successful reimbursement",
         type: "success",
@@ -348,8 +345,8 @@ const MainPage = () => {
 
   return (
     <div className="flex min-h-[400px] flex-col items-center p-4 pb-10 pt-[50px]">
-      <div className="flex w-2/3 flex-col space-y-4 lg:w-1/2">
-        <h1>Mango v3 Exploit Refund</h1>
+      <div className="flex w-2/3 flex-col lg:w-1/2">
+        <h1 className="mb-3">Mango v3 Exploit Refund</h1>
         <p className="text-base text-th-fgd-2">
           Claim your lost funds as approved by the{" "}
           <a
@@ -362,7 +359,7 @@ const MainPage = () => {
           . If you have more than one Mango Account for your connected wallet
           the refund amounts are combined.
         </p>
-        <div className="flex items-center pt-3">
+        <div className="flex items-center pb-4 pt-6">
           <h3 className="mr-3">Your Refund</h3>
           {wallet.connected ? (
             <div className="flex flex-row items-center rounded-full bg-th-bkg-3 py-1 px-3 text-xs">
@@ -398,9 +395,9 @@ const MainPage = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-row">
-                    <CurrencyDollarIcon className="mr-3 w-5"></CurrencyDollarIcon>{" "}
-                    No tokens to reimburse for currently connected wallet
+                  <div className="flex items-center justify-center rounded-md border border-th-bkg-3 p-4">
+                    <ExclamationCircleIcon className="mr-2 w-5"></ExclamationCircleIcon>{" "}
+                    No tokens to refund for your connected wallet
                   </div>
                 )}
               </div>
@@ -419,17 +416,8 @@ const MainPage = () => {
           </div>
         )}
 
-        <div className="flex flex-col justify-end pt-4">
-          <div className="flex justify-center">
-            <Button
-              onClick={() => handleReimbursement(transferClaim)}
-              disabled={transferLoading || !table.length || hasClaimedAll}
-              className="px-14 py-3 text-base"
-            >
-              {transferLoading ? <Loading></Loading> : "Claim tokens"}
-            </Button>
-          </div>
-          <div className="mt-6 flex flex-col">
+        <div className="flex flex-col justify-end">
+          <div className="flex flex-col">
             {/* {wallet.connected && (
               // <Checkbox
               //   disabled={transferLoading || !table.length || hasClaimedAll}
@@ -440,25 +428,51 @@ const MainPage = () => {
               // </Checkbox>
             )} */}
             {wallet.connected && table.length ? (
-              <div className="text-xs text-th-fgd-3">
-                By clicking and accepting the funds . . ., I hereby irrevocably
-                sell, convey, transfer and assign to Mango Labs, LLC all of my
-                right, title and interest in, to and under all claims arising
-                out of or related to the loss of my tokens in the October 2022
-                incident, including, without limitation, all of my causes of
-                action or other rights with respect to such claims, all rights
-                to receive any amounts or property or other distribution in
-                respect of or in connection with such claims, and any and all
-                proceeds of any of the foregoing (including proceeds of
-                proceeds). I further irrevocably and unconditionally release all
-                claims I may have against Mango Labs, LLC, the Mango
-                Decentralized Autonomous Entity, its core contributors, and any
-                of their agents, affiliates, officers, employees, or principals
-                related to this matter. This release constitutes an express,
-                informed, knowing and voluntary waiver and relinquishment to the
-                fullest extent permitted by law.
+              <div className="pt-6 text-xs text-th-fgd-3">
+                <div className="text-sm">
+                  Below is language explaining that you agree to assign your
+                  claims to Mango Labs, LLC as well as release claims against
+                  it, the DAO, and related entities and people. Mango Labs, LLC
+                  reserves its rights to enforce the assigned claims, and it
+                  intends to then transfer any proceeds, after costs, to the
+                  DAO.
+                </div>
+                <div className="mt-4">
+                  By clicking and accepting the funds . . ., I hereby
+                  irrevocably sell, convey, transfer and assign to Mango Labs,
+                  LLC all of my right, title and interest in, to and under all
+                  claims arising out of or related to the loss of my tokens in
+                  the October 2022 incident, including, without limitation, all
+                  of my causes of action or other rights with respect to such
+                  claims, all rights to receive any amounts or property or other
+                  distribution in respect of or in connection with such claims,
+                  and any and all proceeds of any of the foregoing (including
+                  proceeds of proceeds). I further irrevocably and
+                  unconditionally release all claims I may have against Mango
+                  Labs, LLC, the Mango Decentralized Autonomous Entity, its core
+                  contributors, and any of their agents, affiliates, officers,
+                  employees, or principals related to this matter. This release
+                  constitutes an express, informed, knowing and voluntary waiver
+                  and relinquishment to the fullest extent permitted by law.
+                </div>
               </div>
             ) : null}
+          </div>
+          <div className="mt-6 flex justify-center">
+            {isAgreementModalOpen && (
+              <AgreementModal
+                isOpen={isAgreementModalOpen}
+                onClose={setIsAgreementModalOpen}
+                onAggree={() => handleReimbursement(transferClaim)}
+              ></AgreementModal>
+            )}
+            <Button
+              onClick={() => setIsAgreementModalOpen(true)}
+              disabled={transferLoading || !table.length || hasClaimedAll}
+              className="px-14 py-3 text-base"
+            >
+              {transferLoading ? <Loading></Loading> : "Claim Refund"}
+            </Button>
           </div>
         </div>
       </div>
