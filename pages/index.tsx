@@ -466,9 +466,6 @@ const MainPage = () => {
                         <CurrencyDollarIcon className="mr-2 h-4 w-4 text-th-fgd-3"></CurrencyDollarIcon>
                         {abbreviateAddress(mangoAccount.publicKey!)}
                       </div>
-                      // <div className="pl-8 text-xs text-th-fgd-4">
-                      //   {mangoAccount.publicKey.toString()}
-                      // </div>
                     )
                   })}
                 </div>

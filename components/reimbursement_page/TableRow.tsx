@@ -46,7 +46,6 @@ const TableRow = ({
           ></img>
           {symbol}
         </div>
-        {/* <div>{mintPk.toBase58()}</div> */}
       </div>
 
       <div className="col-span-4 text-right">
@@ -59,7 +58,11 @@ const TableRow = ({
           : null}
       </div>
       <div className="col-span-3 flex justify-end">
-        {isClaimed ? <CheckIcon className="w-5"></CheckIcon> : <span>—</span>}
+        {isClaimed ? (
+          <CheckIcon className="w-5 text-th-green"></CheckIcon>
+        ) : (
+          <span>—</span>
+        )}
       </div>
     </div>
   )
