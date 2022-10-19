@@ -1,33 +1,35 @@
-import { ConnectWalletButton } from "./ConnectWalletButton";
-import GlobalNotification from "./GlobalNotification";
-import { useCallback, useEffect, useState } from "react";
-import AccountsModal from "./AccountsModal";
-import { useRouter } from "next/router";
-import FavoritesShortcutBar from "./FavoritesShortcutBar";
-import SettingsModal from "./SettingsModal";
-import { useTranslation } from "next-i18next";
-import { useWallet } from "@solana/wallet-adapter-react";
-import useMangoStore from "stores/useMangoStore";
-import { Transition } from "@headlessui/react";
-import useReimbursementStore from "stores/useReimbursementStore";
-import { IconButton } from "./Button";
-import { CogIcon } from "@heroicons/react/solid";
+import { ConnectWalletButton } from "./ConnectWalletButton"
+import GlobalNotification from "./GlobalNotification"
+import { useCallback, useEffect, useState } from "react"
+import AccountsModal from "./AccountsModal"
+import { useRouter } from "next/router"
+import FavoritesShortcutBar from "./FavoritesShortcutBar"
+import SettingsModal from "./SettingsModal"
+import { useTranslation } from "next-i18next"
+import { useWallet } from "@solana/wallet-adapter-react"
+import useMangoStore from "stores/useMangoStore"
+import { Transition } from "@headlessui/react"
+import useReimbursementStore from "stores/useReimbursementStore"
+import { IconButton } from "./Button"
+import { CogIcon } from "@heroicons/react/solid"
 
 const Layout = ({ children }) => {
-  const router = useRouter();
-  const { pathname } = router;
-  const connection = useMangoStore((s) => s.connection);
-  const wallet = useWallet();
-  const { setClient } = useReimbursementStore();
+  const router = useRouter()
+  const { pathname } = router
+  const connection = useMangoStore((s) => s.connection)
+  const wallet = useWallet()
+  const { setClient } = useReimbursementStore()
   useEffect(() => {
+    console.log("connection", connection.current)
+
     if (wallet.connected && wallet.publicKey?.toBase58()) {
-      setClient(connection.current, wallet);
+      setClient(connection.current, wallet)
     }
   }, [
     wallet.connected,
     wallet.publicKey?.toBase58(),
     connection.current.rpcEndpoint,
-  ]);
+  ])
   return (
     <div className={`flex-grow bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <div className="flex">
@@ -38,24 +40,24 @@ const Layout = ({ children }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 const TopBar = () => {
-  const { t } = useTranslation(["common", "delegate"]);
-  const { publicKey } = useWallet();
-  const mangoAccount = useMangoStore((s) => s.selectedMangoAccount.current);
-  const [showAccountsModal, setShowAccountsModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const { t } = useTranslation(["common", "delegate"])
+  const { publicKey } = useWallet()
+  const mangoAccount = useMangoStore((s) => s.selectedMangoAccount.current)
+  const [showAccountsModal, setShowAccountsModal] = useState(false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
 
   const handleCloseAccounts = useCallback(() => {
-    setShowAccountsModal(false);
-  }, []);
+    setShowAccountsModal(false)
+  }, [])
 
   const canWithdraw =
     mangoAccount?.owner && publicKey
       ? mangoAccount?.owner?.equals(publicKey)
-      : false;
+      : false
 
   return (
     <>
@@ -106,7 +108,7 @@ const TopBar = () => {
         />
       ) : null}
     </>
-  );
-};
+  )
+}
 
-export default Layout;
+export default Layout

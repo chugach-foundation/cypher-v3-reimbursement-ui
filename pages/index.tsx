@@ -36,7 +36,7 @@ import Checkbox from "components/Checkbox"
 import { abbreviateAddress } from "utils"
 import AgreementModal from "components/reimbursement_page/AgreementModal"
 
-const GROUP_NUM = 32
+const GROUP_NUM = 0
 
 export async function getStaticProps({ locale }) {
   return {
