@@ -323,29 +323,31 @@ const MainPage = () => {
         type: "success",
       })
     } catch (e) {
+      let isInsufficientFunds
       if (e?.txid) {
         const txResp = await tryPoolTx(e.txid)
         const logString = (txResp as any)?.meta?.logMessages?.toString()
-        const isInsufficientFunds =
+        isInsufficientFunds =
           logString?.includes("Instruction: Reimburse") &&
           logString?.includes("Error: insufficient funds")
-
-        if (isInsufficientFunds) {
-          notify({
-            title: "Insufficient funds title",
-            description: "custom insufficient funds msg",
-            txid: e?.txid,
-            type: "error",
-          })
-        }
       }
 
-      notify({
-        title: "Something wen't wrong",
-        description: `${e.message}`,
-        txid: e?.txid,
-        type: "error",
-      })
+      if (isInsufficientFunds) {
+        notify({
+          title: "Refund vault needs refilled",
+          description:
+            "To protect users funds, the vault with claimable tokens is refilled in batches. Please reach out on Discord or Twitter.",
+          txid: e?.txid,
+          type: "error",
+        })
+      } else {
+        notify({
+          title: "Something wen't wrong",
+          description: `${e?.message}.`,
+          txid: e?.txid,
+          type: "error",
+        })
+      }
     }
     setTransferLoading(false)
   }

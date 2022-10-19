@@ -1,24 +1,24 @@
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect } from "react"
 import {
   CheckCircleIcon,
   ExternalLinkIcon,
   InformationCircleIcon,
   XCircleIcon,
-} from '@heroicons/react/solid'
+} from "@heroicons/react/solid"
 import useMangoStore, {
   CLIENT_TX_TIMEOUT,
   CLUSTER,
-} from '../stores/useMangoStore'
-import { Notification, notify } from '../utils/notifications'
-import { useTranslation } from 'next-i18next'
-import Loading from './Loading'
-import { Transition } from '@headlessui/react'
+} from "../stores/useMangoStore"
+import { Notification, notify } from "../utils/notifications"
+import { useTranslation } from "next-i18next"
+import Loading from "./Loading"
+import { Transition } from "@headlessui/react"
 
 const NotificationList = () => {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation("common")
   const notifications = useMangoStore((s) => s.notifications)
   const walletTokens = useMangoStore((s) => s.wallet.tokens)
-  const notEnoughSoLMessage = t('not-enough-sol')
+  const notEnoughSoLMessage = t("not-enough-sol")
 
   // if a notification is shown with {"InstructionError":[0,{"Custom":1}]} then
   // add a notification letting the user know they may not have enough SOL
@@ -31,7 +31,7 @@ const NotificationList = () => {
         (n) => n.title && n.title.includes(notEnoughSoLMessage)
       )
       const solBalance = walletTokens.find(
-        (t) => t.config.symbol === 'SOL'
+        (t) => t.config.symbol === "SOL"
       )?.uiBalance
 
       if (
@@ -41,7 +41,7 @@ const NotificationList = () => {
       ) {
         notify({
           title: notEnoughSoLMessage,
-          type: 'info',
+          type: "info",
         })
       }
     }
@@ -63,7 +63,7 @@ const NotificationList = () => {
 }
 
 const Notification = ({ notification }: { notification: Notification }) => {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation("common")
   const setMangoStore = useMangoStore((s) => s.set)
   const { type, title, description, txid, show, id } = notification
 
@@ -71,19 +71,19 @@ const Notification = ({ notification }: { notification: Notification }) => {
   let parsedTitle
   if (description) {
     if (
-      description?.includes('Timed out awaiting') ||
-      description?.includes('was not confirmed')
+      description?.includes("Timed out awaiting") ||
+      description?.includes("was not confirmed")
     ) {
-      parsedTitle = 'Transaction status unknown'
+      parsedTitle = "Transaction status unknown"
     }
   }
 
   // if the notification is a success, then hide the confirming tx notification with the same txid
   useEffect(() => {
-    if ((type === 'error' || type === 'success') && txid) {
+    if ((type === "error" || type === "success") && txid) {
       setMangoStore((s) => {
         const newNotifications = s.notifications.map((n) =>
-          n.txid === txid && n.type === 'confirm' ? { ...n, show: false } : n
+          n.txid === txid && n.type === "confirm" ? { ...n, show: false } : n
         )
         s.notifications = newNotifications
       })
@@ -108,7 +108,7 @@ const Notification = ({ notification }: { notification: Notification }) => {
           hideNotification()
         }
       },
-      parsedTitle || type === 'confirm' || type === 'error'
+      parsedTitle || type === "confirm" || type === "error"
         ? CLIENT_TX_TIMEOUT
         : 8000
     )
@@ -131,22 +131,22 @@ const Notification = ({ notification }: { notification: Notification }) => {
       leaveTo="-translate-y-2 sm:translate-y-0 sm:-translate-x-48"
     >
       <div
-        className={`pointer-events-auto mt-2 w-full max-w-sm overflow-hidden rounded-md border border-th-bkg-4 bg-th-bkg-3 shadow-lg ring-1 ring-black ring-opacity-5`}
+        className={`pointer-events-auto mt-2 w-full max-w-sm overflow-hidden rounded-md border border-th-bkg-4 bg-th-bkg-3 shadow-lg ring-1 ring-black ring-opacity-5 md:max-w-md`}
       >
         <div className={`relative flex items-center px-2 py-2.5`}>
           <div className={`flex-shrink-0`}>
-            {type === 'success' ? (
+            {type === "success" ? (
               <CheckCircleIcon className={`mr-1 h-7 w-7 text-th-green`} />
             ) : null}
-            {type === 'info' && (
+            {type === "info" && (
               <InformationCircleIcon
                 className={`mr-1 h-7 w-7 text-th-primary`}
               />
             )}
-            {type === 'error' && (
+            {type === "error" && (
               <XCircleIcon className={`mr-1 h-7 w-7 text-th-red`} />
             )}
-            {type === 'confirm' && (
+            {type === "confirm" && (
               <Loading className="mr-1 h-7 w-7 text-th-fgd-3" />
             )}
           </div>
@@ -162,9 +162,9 @@ const Notification = ({ notification }: { notification: Notification }) => {
             {txid ? (
               <a
                 href={
-                  'https://explorer.solana.com/tx/' +
+                  "https://explorer.solana.com/tx/" +
                   txid +
-                  '?cluster=' +
+                  "?cluster=" +
                   CLUSTER
                 }
                 className="mt-1 flex items-center text-sm"
@@ -172,7 +172,7 @@ const Notification = ({ notification }: { notification: Notification }) => {
                 rel="noreferrer"
               >
                 <div className="flex-1 break-all text-xs">
-                  {type === 'error'
+                  {type === "error"
                     ? txid
                     : `${txid.slice(0, 14)}...${txid.slice(txid.length - 14)}`}
                 </div>
@@ -185,7 +185,7 @@ const Notification = ({ notification }: { notification: Notification }) => {
               onClick={hideNotification}
               className={`text-th-fgd-4 focus:outline-none md:hover:text-th-primary`}
             >
-              <span className={`sr-only`}>{t('close')}</span>
+              <span className={`sr-only`}>{t("close")}</span>
               <svg
                 className={`h-5 w-5`}
                 xmlns="http://www.w3.org/2000/svg"
