@@ -37,7 +37,7 @@ import { abbreviateAddress } from "utils"
 import AgreementModal from "components/reimbursement_page/AgreementModal"
 import { mangoAccountSelector } from "stores/selectors"
 
-const GROUP_NUM = 0
+const GROUP_NUM = 1
 
 export async function getStaticProps({ locale }) {
   return {
@@ -541,7 +541,10 @@ const MainPage = () => {
                 isLoading={transferLoading}
                 isOpen={isAgreementModalOpen}
                 onClose={() => setIsAgreementModalOpen(false)}
-                onAggree={() => handleReimbursement(transferClaim)}
+                onAggree={() => {
+                  setTransferClaim(true)
+                  handleReimbursement(true)
+                }}
               ></AgreementModal>
             )}
             <Button
