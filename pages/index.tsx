@@ -17,7 +17,7 @@ import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions"
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token"
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions"
 import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes"
-import { Config } from "@blockworks-foundation/mango-client"
+import { Config, sleep } from "@blockworks-foundation/mango-client"
 import { notify } from "utils/notifications"
 import Loading from "components/Loading"
 import { WalletIcon } from "components"
@@ -323,6 +323,23 @@ const MainPage = () => {
         type: "success",
       })
     } catch (e) {
+      if (e?.txid) {
+        const txResp = await tryPoolTx(e.txid)
+        const logString = (txResp as any)?.meta?.logMessages?.toString()
+        const isInsufficientFunds =
+          logString.includes("Instruction: Reimburse") &&
+          logString.includes("Error: insufficient funds")
+
+        if (isInsufficientFunds) {
+          notify({
+            title: "Insufficient funds title",
+            description: "custom insufficient funds msg",
+            txid: e?.txid,
+            type: "error",
+          })
+        }
+      }
+
       notify({
         title: "Something wen't wrong",
         description: `${e.message}`,
@@ -332,7 +349,43 @@ const MainPage = () => {
     }
     setTransferLoading(false)
   }
+  const tryPoolTx = async (txId) => {
+    let interval: NodeJS.Timeout | null = null
+    const poolPromise = () =>
+      new Promise((resolve, reject) => {
+        let maxCount = 10
+        let runCount = 0
 
+        interval = setInterval(async () => {
+          runCount++
+          try {
+            const resp = await connection.current.getTransaction(txId, {
+              commitment: "confirmed",
+              maxSupportedTransactionVersion: 0,
+            })
+            if (resp) {
+              resolve(resp)
+              if (interval) {
+                clearInterval(interval)
+              }
+            }
+          } catch (e) {
+            console.log(e)
+          }
+          if (maxCount <= runCount) {
+            resolve(null)
+            if (interval) {
+              clearInterval(interval)
+            }
+          }
+        }, 500)
+      })
+    const result = await poolPromise()
+    if (interval) {
+      clearInterval(interval)
+    }
+    return result
+  }
   useEffect(() => {
     if (reimbursementClient) {
       if (wallet.publicKey) {
