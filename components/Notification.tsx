@@ -13,6 +13,7 @@ import { Notification, notify } from "../utils/notifications"
 import { useTranslation } from "next-i18next"
 import Loading from "./Loading"
 import { Transition } from "@headlessui/react"
+import { useWallet } from "@solana/wallet-adapter-react"
 
 const NotificationList = () => {
   const { t } = useTranslation("common")
@@ -65,6 +66,7 @@ const NotificationList = () => {
 const Notification = ({ notification }: { notification: Notification }) => {
   const { t } = useTranslation("common")
   const setMangoStore = useMangoStore((s) => s.set)
+  const wallet = useWallet()
   const { type, title, description, txid, show, id } = notification
 
   // overwrite the title if of the error message if it is a time out error
@@ -162,7 +164,11 @@ const Notification = ({ notification }: { notification: Notification }) => {
             {txid ? (
               <a
                 href={
-                  "https://explorer.solana.com/tx/" +
+                  `${
+                    txid === wallet?.publicKey?.toString()
+                      ? "https://explorer.solana.com/account/"
+                      : "https://explorer.solana.com/tx/"
+                  }` +
                   txid +
                   "?cluster=" +
                   CLUSTER
