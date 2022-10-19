@@ -19,11 +19,16 @@ const Layout = ({ children }) => {
   const connection = useMangoStore((s) => s.connection)
   const wallet = useWallet()
   const { setClient } = useReimbursementStore()
+  const actions = useMangoStore.getState().actions
+
   useEffect(() => {
     console.log("connection", connection.current)
 
     if (wallet.connected && wallet.publicKey?.toBase58()) {
       setClient(connection.current, wallet)
+      if (wallet?.wallet) {
+        actions.fetchAllMangoAccounts(wallet.wallet)
+      }
     }
   }, [
     wallet.connected,

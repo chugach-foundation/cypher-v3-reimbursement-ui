@@ -35,6 +35,7 @@ import {
 import Checkbox from "components/Checkbox"
 import { abbreviateAddress } from "utils"
 import AgreementModal from "components/reimbursement_page/AgreementModal"
+import { mangoAccountSelector } from "stores/selectors"
 
 const GROUP_NUM = 0
 
@@ -70,6 +71,8 @@ const MainPage = () => {
   const [reimbursementAccount, setReimbursementAccount] =
     useState<ReimbursementAccount | null>(null)
   const [transferClaim, setTransferClaim] = useState(false)
+  const mangoAccounts = useMangoStore((s) => s.mangoAccounts)
+
   const hasClaimedAll =
     reimbursementAccount !== null &&
     reimbursementAccount.reimbursed !== 0 &&
@@ -414,14 +417,33 @@ const MainPage = () => {
           . If you have more than one Mango Account for your connected wallet
           the refund amounts are combined.
         </p>
-        <div className="flex items-center pb-4 pt-6">
-          <h3 className="mr-3">Your Refund</h3>
-          {wallet.connected ? (
-            <div className="flex flex-row items-center rounded-full bg-th-bkg-3 py-1 px-3 text-xs">
-              <WalletIcon className="mr-2 h-4 w-4 text-th-green"></WalletIcon>
-              {abbreviateAddress(wallet.publicKey!)}
+        {wallet.connected ? (
+          <>
+            <div className="flex items-center pb-4 pt-6">
+              <h3 className="mr-3">Connected Wallet:</h3>
+              <div className="flex flex-row items-center rounded-full bg-th-bkg-3 py-1 px-3 text-xs">
+                <WalletIcon className="mr-2 h-4 w-4 text-th-green"></WalletIcon>
+                {abbreviateAddress(wallet.publicKey!)}
+              </div>
             </div>
-          ) : null}
+            {mangoAccounts?.length ? (
+              <div className="flex flex-col pb-4 pt-1">
+                <h3 className="mr-3">Mango Accounts:</h3>
+                <div className="mt-2 flex flex-col">
+                  {mangoAccounts.map((mangoAccount) => {
+                    return (
+                      <div className="pl-8 text-xs text-th-fgd-4">
+                        {mangoAccount.publicKey.toString()}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+        <div className="flex items-center pb-4 pt-1">
+          <h3 className="mr-3">Your Refund:</h3>
         </div>
         {wallet.connected ? (
           <div>
@@ -525,7 +547,7 @@ const MainPage = () => {
             <Button
               onClick={() => setIsAgreementModalOpen(true)}
               disabled={transferLoading || !table.length || hasClaimedAll}
-              className="px-14 py-3 text-base"
+              className="px-16 py-3 text-base"
             >
               {transferLoading ? <Loading></Loading> : "Claim Tokens"}
             </Button>

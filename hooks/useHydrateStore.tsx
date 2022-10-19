@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
-import { AccountInfo, PublicKey } from '@solana/web3.js'
-import useMangoStore, { programId, SECONDS } from '../stores/useMangoStore'
-import useInterval from './useInterval'
-import { Market, Orderbook as SpotOrderBook } from '@project-serum/serum'
+import { useEffect } from "react"
+import { AccountInfo, PublicKey } from "@solana/web3.js"
+import useMangoStore, { programId, SECONDS } from "../stores/useMangoStore"
+import useInterval from "./useInterval"
+import { Market, Orderbook as SpotOrderBook } from "@project-serum/serum"
 import {
   BookSide,
   BookSideLayout,
@@ -11,7 +11,7 @@ import {
   PerpMarket,
   ReferrerMemory,
   ReferrerMemoryLayout,
-} from '@blockworks-foundation/mango-client'
+} from "@blockworks-foundation/mango-client"
 import {
   actionsSelector,
   connectionSelector,
@@ -19,8 +19,8 @@ import {
   marketConfigSelector,
   marketSelector,
   marketsSelector,
-} from '../stores/selectors'
-import { useWallet } from '@solana/wallet-adapter-react'
+} from "../stores/selectors"
+import { useWallet } from "@solana/wallet-adapter-react"
 
 function decodeBookL2(market, accInfo: AccountInfo<Buffer>): number[][] {
   if (market && accInfo?.data) {
@@ -81,35 +81,35 @@ const useHydrateStore = () => {
   }, [actions])
 
   // Fetch markets info once mango group is loaded
-  useEffect(() => {
-    actions.fetchMarketsInfo()
-  }, [actions])
+  // useEffect(() => {
+  //   actions.fetchMarketsInfo()
+  // }, [actions])
 
-  useInterval(() => {
-    actions.fetchMangoGroupCache()
-  }, 12 * SECONDS)
+  // useInterval(() => {
+  //   actions.fetchMangoGroupCache()
+  // }, 12 * SECONDS)
 
-  useInterval(() => {
-    if (mangoAccount) {
-      actions.reloadOrders()
-    }
-  }, 20 * SECONDS)
+  // useInterval(() => {
+  //   if (mangoAccount) {
+  //     actions.reloadOrders()
+  //   }
+  // }, 20 * SECONDS)
 
-  useInterval(() => {
-    if (mangoAccount) {
-      actions.reloadMangoAccount()
-      actions.fetchTradeHistory()
-      actions.updateOpenOrders()
-    }
-  }, 90 * SECONDS)
+  // useInterval(() => {
+  //   if (mangoAccount) {
+  //     actions.reloadMangoAccount()
+  //     actions.fetchTradeHistory()
+  //     actions.updateOpenOrders()
+  //   }
+  // }, 90 * SECONDS)
 
-  useInterval(() => {
-    actions.fetchMangoGroup()
-    actions.fetchMarketsInfo()
-    if (wallet) {
-      actions.fetchWalletTokens(wallet)
-    }
-  }, 120 * SECONDS)
+  // useInterval(() => {
+  //   actions.fetchMangoGroup()
+  //   actions.fetchMarketsInfo()
+  //   if (wallet) {
+  //     actions.fetchWalletTokens(wallet)
+  //   }
+  // }, 120 * SECONDS)
 
   useEffect(() => {
     if (!marketConfig || !markets) return
@@ -184,7 +184,7 @@ const useHydrateStore = () => {
           const [referrerMemoryPk] = await PublicKey.findProgramAddress(
             [
               mangoAccount.publicKey.toBytes(),
-              new Buffer('ReferrerMemory', 'utf-8'),
+              new Buffer("ReferrerMemory", "utf-8"),
             ],
             programId
           )
@@ -199,7 +199,7 @@ const useHydrateStore = () => {
             })
           }
         } catch (e) {
-          console.error('Unable to fetch referrer', e)
+          console.error("Unable to fetch referrer", e)
         }
       }
 
@@ -212,7 +212,7 @@ const useHydrateStore = () => {
     let previousBidInfo: AccountInfo<Buffer> | null = null
     let previousAskInfo: AccountInfo<Buffer> | null = null
     if (!marketConfig || !selectedMarket) return
-    console.log('in orderbook WS useEffect')
+    console.log("in orderbook WS useEffect")
 
     const bidSubscriptionId = connection.onAccountChange(
       marketConfig.bidsKey,
@@ -226,7 +226,7 @@ const useHydrateStore = () => {
         ) {
           previousBidInfo = info
 
-          info['parsed'] = decodeBook(selectedMarket, info)
+          info["parsed"] = decodeBook(selectedMarket, info)
           setMangoStore((state) => {
             state.accountInfos[marketConfig.bidsKey.toString()] = info
             state.selectedMarket.orderBook.bids = decodeBookL2(
@@ -249,7 +249,7 @@ const useHydrateStore = () => {
         ) {
           previousAskInfo = info
 
-          info['parsed'] = decodeBook(selectedMarket, info)
+          info["parsed"] = decodeBook(selectedMarket, info)
           setMangoStore((state) => {
             state.accountInfos[marketConfig.asksKey.toString()] = info
             state.selectedMarket.orderBook.asks = decodeBookL2(

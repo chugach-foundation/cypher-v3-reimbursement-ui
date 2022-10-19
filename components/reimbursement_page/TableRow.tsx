@@ -59,11 +59,7 @@ const TableRow = ({
           : null}
       </div>
       <div className="col-span-3 flex justify-end">
-        {isClaimed ? (
-          <CheckIcon className="w-5"></CheckIcon>
-        ) : (
-          <XIcon className="w-5"></XIcon>
-        )}
+        {isClaimed ? <CheckIcon className="w-5"></CheckIcon> : <span>—</span>}
       </div>
     </div>
   )
