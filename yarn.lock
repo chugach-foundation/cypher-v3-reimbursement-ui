@@ -1073,10 +1073,10 @@
     "@solana/spl-token" "^0.3.5"
     "@solana/web3.js" "^1.63.1"
 
-"@blockworks-foundation/mangolana@^0.0.1-beta.4":
-  version "0.0.1-beta.4"
-  resolved "https://registry.yarnpkg.com/@blockworks-foundation/mangolana/-/mangolana-0.0.1-beta.4.tgz#8f1df85cb6de19c5e3cb19350579f3989566877a"
-  integrity sha512-krsCimDAc3Djkxjq3kx0iPCZ+MSpR9TF1RjMX5jxT/0AbzuTwmWYMvvoJOuEwVf4Vh6XIVSB/YEkCOqJTBv2rg==
+"@blockworks-foundation/mangolana@0.0.1-beta.6":
+  version "0.0.1-beta.6"
+  resolved "https://registry.yarnpkg.com/@blockworks-foundation/mangolana/-/mangolana-0.0.1-beta.6.tgz#7a2b63ee796a533973f13bd973ff9ef97a201daf"
+  integrity sha512-DXPsourZuImJX4BC6rs11LSW8luaETu7drpLtLueLrjEK6DW6VP3TX77BvWp31PD44NHjB2Mu3gYYNb+MZr5mQ==
   dependencies:
     "@solana/web3.js" "^1.63.1"
     bs58 "^5.0.0"

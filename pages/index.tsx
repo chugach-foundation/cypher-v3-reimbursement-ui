@@ -329,7 +329,7 @@ const MainPage = () => {
       )
       if (!areAmountsInVaultHighEnough) {
         notify({
-          title: "Refund vault needs refilled",
+          title: "Token vault needs refilled",
           description:
             "To protect users funds, the vault with claimable tokens is refilled in batches. Please reach out on Discord or Twitter.",
           type: "error",
@@ -360,7 +360,7 @@ const MainPage = () => {
 
       if (isInsufficientFunds) {
         notify({
-          title: "Refund vault needs refilled",
+          title: "Token vault needs refilled",
           description:
             "To protect users funds, the vault with claimable tokens is refilled in batches. Please reach out on Discord or Twitter.",
           txid: e?.txid,
