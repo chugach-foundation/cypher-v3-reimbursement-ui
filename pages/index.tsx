@@ -327,8 +327,8 @@ const MainPage = () => {
         const txResp = await tryPoolTx(e.txid)
         const logString = (txResp as any)?.meta?.logMessages?.toString()
         const isInsufficientFunds =
-          logString.includes("Instruction: Reimburse") &&
-          logString.includes("Error: insufficient funds")
+          logString?.includes("Instruction: Reimburse") &&
+          logString?.includes("Error: insufficient funds")
 
         if (isInsufficientFunds) {
           notify({
