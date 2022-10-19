@@ -21,7 +21,10 @@ import { Config } from "@blockworks-foundation/mango-client"
 import { notify } from "utils/notifications"
 import Loading from "components/Loading"
 import { WalletIcon } from "components"
-import { CurrencyDollarIcon } from "@heroicons/react/solid"
+import {
+  CurrencyDollarIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/solid"
 import TableRow from "components/reimbursement_page/TableRow"
 import EmptyTableRows from "components/reimbursement_page/EmptyRow"
 import {
@@ -30,6 +33,7 @@ import {
   TableInfo,
 } from "components/reimbursement_page/types"
 import Checkbox from "components/Checkbox"
+import { abbreviateAddress } from "utils"
 import AgreementModal from "components/reimbursement_page/AgreementModal"
 
 const GROUP_NUM = 32
@@ -340,49 +344,47 @@ const MainPage = () => {
   }, [reimbursementClient !== null, wallet.publicKey?.toBase58()])
 
   return (
-    <div className="flex min-h-[400px] flex-col items-center p-4 pt-[50px]">
-      <div className="flex w-2/3 flex-col space-y-4 lg:w-1/2">
-        <h2>Mango V3 Claim Funds</h2>
-        <div className="text-th-fgd-3">
-          On this interface you can redeem your Mango V3 protocol funds.
+    <div className="flex min-h-[400px] flex-col items-center p-4 pb-10 pt-[50px]">
+      <div className="flex w-2/3 flex-col lg:w-1/2">
+        <h1 className="mb-3">Mango v3 Exploit Refund</h1>
+        <p className="text-base text-th-fgd-2">
+          Claim your lost funds as approved by the{" "}
+          <a
+            href="https://app.realms.today/dao/MNGO/proposal/HRR4ydbGUYYTCUgr7KvKdWW87HzCQy9Fu6aL8X5BMFUT"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            DAO vote
+          </a>
+          . If you have more than one Mango Account for your connected wallet
+          the refund amounts are combined.
+        </p>
+        <div className="flex items-center pb-4 pt-6">
+          <h3 className="mr-3">Your Refund</h3>
+          {wallet.connected ? (
+            <div className="flex flex-row items-center rounded-full bg-th-bkg-3 py-1 px-3 text-xs">
+              <WalletIcon className="mr-2 h-4 w-4 text-th-green"></WalletIcon>
+              {abbreviateAddress(wallet.publicKey!)}
+            </div>
+          ) : null}
         </div>
-        <div className="text-th-fgd-3">
-          Mango has secured funds for users to redeem a settlement amount. You
-          can connect your funds to see the amounts available for all mango
-          accounts owned by the connected wallet.
-        </div>
-        <h3 className="">Connected wallet</h3>
-        <div className="border border-th-bkg-3 p-4">
-          <div className="flex items-center text-xs">
-            {wallet.connected ? (
-              <div className="flex flex-row items-center text-xs">
-                <WalletIcon className="mr-3 w-5"></WalletIcon>
-                {wallet.publicKey?.toBase58()}
-              </div>
-            ) : (
-              <div className="flex w-full items-center justify-center">
-                <WalletIcon className="mr-3 w-5"></WalletIcon> Please connect
-                your wallet
+        {wallet.connected ? (
+          <div>
+            {amountsLoading && (
+              <div className="flex justify-center py-10">
+                <Loading></Loading>
               </div>
             )}
-          </div>
-        </div>
-        <h3>Tokens</h3>
-        {wallet.connected ? (
-          <div className="border border-th-bkg-3 p-4">
-            <div className="flex justify-center">
-              {amountsLoading && <Loading></Loading>}
-            </div>
+
             {!amountsLoading && (
               <div>
-                <div className="mb-2 grid grid-cols-12 gap-3 border-b border-th-bkg-3 pb-2">
-                  <div className="col-span-1"></div>
-                  <div className="col-span-7">Token</div>
-                  <div className="col-span-2">Amount</div>
-                  <div className="col-span-2">Claimed</div>
+                <div className="mb-2 grid grid-cols-12 gap-3 px-4 text-xs text-th-fgd-3">
+                  <div className="col-span-5">Token</div>
+                  <div className="col-span-4 text-right">Amount</div>
+                  <div className="col-span-3 text-right">Claimed</div>
                 </div>
                 {table.length ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {table.map((x) => (
                       <TableRow
                         reimbursementAccount={reimbursementAccount}
@@ -393,29 +395,29 @@ const MainPage = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-row">
-                    <CurrencyDollarIcon className="mr-3 w-5"></CurrencyDollarIcon>{" "}
-                    No tokens to reimburse for currently connected wallet
+                  <div className="flex items-center justify-center rounded-md border border-th-bkg-3 p-4">
+                    <ExclamationCircleIcon className="mr-2 w-5"></ExclamationCircleIcon>{" "}
+                    No tokens to refund for your connected wallet
                   </div>
                 )}
               </div>
             )}
           </div>
         ) : (
-          <div className="border border-th-bkg-3 p-4">
-            <div className="mb-2 grid grid-cols-12 border-b border-th-bkg-3 pb-2">
-              <div className="col-span-1"></div>
-              <div className="col-span-7">Token</div>
-              <div className="col-span-2">Amount</div>
+          <div className="flex w-full flex-col items-center justify-center rounded-lg border border-th-bkg-3 p-6">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-th-bkg-3">
+              <WalletIcon className="h-6 w-6"></WalletIcon>
             </div>
-            <div className="space-y-3">
-              <EmptyTableRows />
-            </div>
+            <span className="text-center text-base">
+              Connect an eligible wallet
+              <br />
+              to claim your refund
+            </span>
           </div>
         )}
 
-        <div className="flex flex-col justify-end space-x-4 pt-4">
-          <div className="mt-6 flex flex-col">
+        <div className="flex flex-col justify-end">
+          <div className="flex flex-col">
             {/* {wallet.connected && (
               // <Checkbox
               //   disabled={transferLoading || !table.length || hasClaimedAll}
@@ -426,7 +428,7 @@ const MainPage = () => {
               // </Checkbox>
             )} */}
             {wallet.connected && table.length ? (
-              <div className="text-xs text-th-fgd-3">
+              <div className="pt-6 text-xs text-th-fgd-3">
                 <div className="text-sm">
                   Below is language explaining that you agree to assign your
                   claims to Mango Labs, LLC as well as release claims against
@@ -456,7 +458,7 @@ const MainPage = () => {
               </div>
             ) : null}
           </div>
-          <div className="mt-4 flex justify-center">
+          <div className="mt-6 flex justify-center">
             {isAgreementModalOpen && (
               <AgreementModal
                 isOpen={isAgreementModalOpen}
@@ -469,7 +471,7 @@ const MainPage = () => {
               disabled={transferLoading || !table.length || hasClaimedAll}
               className="px-14 py-3 text-base"
             >
-              {transferLoading ? <Loading></Loading> : "Claim tokens"}
+              {transferLoading ? <Loading></Loading> : "Claim Refund"}
             </Button>
           </div>
         </div>
