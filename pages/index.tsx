@@ -30,6 +30,7 @@ import {
 } from "components/reimbursement_page/types"
 import { abbreviateAddress } from "utils"
 import AgreementModal from "components/reimbursement_page/AgreementModal"
+import Link from "next/link"
 
 const GROUP_NUM = 1
 
@@ -328,8 +329,9 @@ const MainPage = () => {
       )
       if (!areAmountsInVaultHighEnough) {
         notify({
-          title: "not enough funds in vaults info",
-          description: "not enough funds in vaults info",
+          title: "Refund vault needs refilled",
+          description:
+            "To protect users funds, the vault with claimable tokens is refilled in batches. Please reach out on Discord or Twitter.",
           type: "error",
         })
         setTransferLoading(false)
@@ -555,9 +557,6 @@ const MainPage = () => {
               </div>
             ) : null}
           </div>
-          {toLowAmountInOneOfVaults && (
-            <div>Not enough funds in vaults info</div>
-          )}
           <div className="mt-8 flex justify-center">
             {isAgreementModalOpen && (
               <AgreementModal
@@ -582,6 +581,15 @@ const MainPage = () => {
               {transferLoading ? <Loading></Loading> : "Claim Tokens"}
             </Button>
           </div>
+          {toLowAmountInOneOfVaults && table?.length ? (
+            <div className="mt-2 rounded p-4 text-th-red">
+              There are not enough funds in the claimable token vault. To
+              protect user's funds, the vaults with claimable tokens are
+              refilled in batches. Please reach out on{" "}
+              <Link href="https://discord.gg/mangomarkets">Discord</Link> or{" "}
+              <Link href="https://twitter.com/mangomarkets">Twitter</Link>.
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
