@@ -460,7 +460,7 @@ const MainPage = () => {
             {isAgreementModalOpen && (
               <AgreementModal
                 isOpen={isAgreementModalOpen}
-                onClose={setIsAgreementModalOpen}
+                onClose={() => setIsAgreementModalOpen(false)}
                 onAggree={() => handleReimbursement(transferClaim)}
               ></AgreementModal>
             )}
