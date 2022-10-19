@@ -1,37 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { serverSideTranslations } from "next-i18next/serverSideTranslations";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { BN } from "@project-serum/anchor";
-import useMangoStore from "stores/useMangoStore";
-import useReimbursementStore from "stores/useReimbursementStore";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import Button from "components/Button";
+import React, { useEffect, useState } from "react"
+import { serverSideTranslations } from "next-i18next/serverSideTranslations"
+import { useWallet } from "@solana/wallet-adapter-react"
+import { BN } from "@project-serum/anchor"
+import useMangoStore from "stores/useMangoStore"
+import useReimbursementStore from "stores/useReimbursementStore"
+import { PublicKey, TransactionInstruction } from "@solana/web3.js"
+import Button from "components/Button"
 import {
   chunks,
   isExistingTokenAccount,
   tryDecodeTable,
   tryGetReimbursedAccounts,
   WSOL_MINT_PK,
-} from "utils/tools";
-import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
-import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions";
-import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes";
-import { Config } from "@blockworks-foundation/mango-client";
-import { notify } from "utils/notifications";
-import Loading from "components/Loading";
-import { WalletIcon } from "components";
-import { CurrencyDollarIcon } from "@heroicons/react/solid";
-import TableRow from "components/reimbursement_page/TableRow";
-import EmptyTableRows from "components/reimbursement_page/EmptyRow";
+} from "utils/tools"
+import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions"
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token"
+import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions"
+import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes"
+import { Config } from "@blockworks-foundation/mango-client"
+import { notify } from "utils/notifications"
+import Loading from "components/Loading"
+import { WalletIcon } from "components"
+import { CurrencyDollarIcon } from "@heroicons/react/solid"
+import TableRow from "components/reimbursement_page/TableRow"
+import EmptyTableRows from "components/reimbursement_page/EmptyRow"
 import {
   MintInfo,
   ReimbursementAccount,
   TableInfo,
-} from "components/reimbursement_page/types";
-import Checkbox from "components/Checkbox";
+} from "components/reimbursement_page/types"
+import Checkbox from "components/Checkbox"
+import AgreementModal from "components/reimbursement_page/AgreementModal"
 
-const GROUP_NUM = 32;
+const GROUP_NUM = 32
 
 export async function getStaticProps({ locale }) {
   return {
@@ -46,35 +47,36 @@ export async function getStaticProps({ locale }) {
       ])),
       // Will be passed to the page component as props
     },
-  };
+  }
 }
 
 const MainPage = () => {
-  const connection = useMangoStore((s) => s.connection);
-  const groupName = useMangoStore((s) => s.selectedMangoGroup);
-  const wallet = useWallet();
-  const { reimbursementClient } = useReimbursementStore();
+  const connection = useMangoStore((s) => s.connection)
+  const groupName = useMangoStore((s) => s.selectedMangoGroup)
+  const wallet = useWallet()
+  const { reimbursementClient } = useReimbursementStore()
 
   const [mintsForAvailableAmounts, setMintsForAvailableAmounts] = useState<{
-    [key: string]: MintInfo;
-  }>({});
-  const [table, setTable] = useState<TableInfo[]>([]);
-  const [amountsLoading, setAmountsLoading] = useState(false);
-  const [transferLoading, setTransferLoading] = useState(false);
+    [key: string]: MintInfo
+  }>({})
+  const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false)
+  const [table, setTable] = useState<TableInfo[]>([])
+  const [amountsLoading, setAmountsLoading] = useState(false)
+  const [transferLoading, setTransferLoading] = useState(false)
   const [reimbursementAccount, setReimbursementAccount] =
-    useState<ReimbursementAccount | null>(null);
-  const [transferClaim, setTransferClaim] = useState(false);
+    useState<ReimbursementAccount | null>(null)
+  const [transferClaim, setTransferClaim] = useState(false)
   const hasClaimedAll =
     reimbursementAccount !== null &&
     reimbursementAccount.reimbursed !== 0 &&
     reimbursementAccount.claimTransferred !== 0 &&
-    reimbursementAccount.claimTransferred === reimbursementAccount.reimbursed;
+    reimbursementAccount.claimTransferred === reimbursementAccount.reimbursed
 
   const resetAmountState = () => {
-    setMintsForAvailableAmounts({});
-    setTable([]);
-    setReimbursementAccount(null);
-  };
+    setMintsForAvailableAmounts({})
+    setTable([])
+    setReimbursementAccount(null)
+  }
   const getReimbursementAccount = async (group) => {
     const reimbursementAccount = (
       await PublicKey.findProgramAddress(
@@ -85,35 +87,35 @@ const MainPage = () => {
         ],
         reimbursementClient!.program.programId
       )
-    )[0];
+    )[0]
     const ra = await tryGetReimbursedAccounts(
       reimbursementClient,
       reimbursementAccount
-    );
-    setReimbursementAccount(ra);
-  };
+    )
+    setReimbursementAccount(ra)
+  }
   const getCurrentGroup = async () => {
-    const result = await reimbursementClient!.program.account.group.all();
-    const group = result.find((group) => group.account.groupNum === GROUP_NUM);
-    return group;
-  };
+    const result = await reimbursementClient!.program.account.group.all()
+    const group = result.find((group) => group.account.groupNum === GROUP_NUM)
+    return group
+  }
   const getAccountAmountsInfo = async (walletPk: PublicKey) => {
-    setAmountsLoading(true);
+    setAmountsLoading(true)
     try {
-      const group = await getCurrentGroup();
-      const config = Config.ids();
-      const groupIds = config.getGroup(connection.cluster, groupName.name);
+      const group = await getCurrentGroup()
+      const config = Config.ids()
+      const groupIds = config.getGroup(connection.cluster, groupName.name)
 
-      const table = await tryDecodeTable(reimbursementClient, group);
+      const table = await tryDecodeTable(reimbursementClient, group)
       const balancesForUser = table.find((row) =>
         row.owner.equals(wallet.publicKey)
-      )?.balances;
+      )?.balances
       if (balancesForUser) {
-        const indexesToUse: number[] = [];
+        const indexesToUse: number[] = []
         for (let i in balancesForUser) {
-          const isZero = balancesForUser[i].isZero();
+          const isZero = balancesForUser[i].isZero()
           if (!isZero) {
-            indexesToUse.push(Number(i));
+            indexesToUse.push(Number(i))
           }
         }
         const tableInfo = [
@@ -122,46 +124,46 @@ const MainPage = () => {
               nativeAmount: balancesForUser[idx],
               mintPubKey: group!.account.mints[idx],
               index: idx,
-            };
+            }
           }),
-        ];
-        const mintPks = tableInfo.map((x) => x.mintPubKey);
+        ]
+        const mintPks = tableInfo.map((x) => x.mintPubKey)
         const mints = await Promise.all(
           mintPks.map((x) => connection.current.getParsedAccountInfo(x))
-        );
-        const mintInfos = {};
+        )
+        const mintInfos = {}
         for (let i = 0; i < mintPks.length; i++) {
-          const mintPk = mintPks[i];
+          const mintPk = mintPks[i]
           mintInfos[mintPk.toBase58()] = {
             decimals: (mints[i].value?.data as any).parsed.info.decimals,
             symbol: groupIds!.tokens.find(
               (x) => x.mintKey.toBase58() === mintPk.toBase58()
             )?.symbol,
-          };
+          }
         }
-        setMintsForAvailableAmounts(mintInfos);
-        setTable(tableInfo);
-        await getReimbursementAccount(group);
+        setMintsForAvailableAmounts(mintInfos)
+        setTable(tableInfo)
+        await getReimbursementAccount(group)
       } else {
-        resetAmountState();
+        resetAmountState()
       }
     } catch (e) {
       notify({
         type: "error",
         title: "Failed to get account reimbursement amount",
         description: `${e}`,
-      });
+      })
     }
-    setAmountsLoading(false);
-  };
+    setAmountsLoading(false)
+  }
 
   const getReimbursementAccountInstructions = async (
     group: any,
     reimbursementAccount: PublicKey
   ) => {
-    const instructions: TransactionInstruction[] = [];
+    const instructions: TransactionInstruction[] = []
     const isExistingReimbursementAccount =
-      await connection.current.getAccountInfo(reimbursementAccount);
+      await connection.current.getAccountInfo(reimbursementAccount)
     if (!isExistingReimbursementAccount) {
       const instruction = await reimbursementClient!.program.methods
         .createReimbursementAccount()
@@ -170,32 +172,32 @@ const MainPage = () => {
           mangoAccountOwner: wallet.publicKey!,
           payer: wallet.publicKey!,
         })
-        .instruction();
-      instructions.push(instruction);
+        .instruction()
+      instructions.push(instruction)
     }
-    return instructions;
-  };
+    return instructions
+  }
   const getReimbursementInstructions = async (
     group: any,
     reimbursementAccountPk: PublicKey,
     transferClaim: boolean
   ) => {
-    const instructions: TransactionInstruction[] = [];
-    const owner = wallet.publicKey!;
-    const table = await tryDecodeTable(reimbursementClient, group);
+    const instructions: TransactionInstruction[] = []
+    const owner = wallet.publicKey!
+    const table = await tryDecodeTable(reimbursementClient, group)
     for (const availableMintPk of Object.keys(mintsForAvailableAmounts)) {
       const mintIndex = group?.account.mints.findIndex(
         (x) => x.toBase58() === availableMintPk
-      );
-      const mintPk = group?.account.mints[mintIndex];
-      const claimMintPk = group?.account.claimMints[mintIndex];
-      const isWSolMint = mintPk.toBase58() === WSOL_MINT_PK.toBase58();
+      )
+      const mintPk = group?.account.mints[mintIndex]
+      const claimMintPk = group?.account.claimMints[mintIndex]
+      const isWSolMint = mintPk.toBase58() === WSOL_MINT_PK.toBase58()
       const tableIndex = table.findIndex((row) =>
         row.owner.equals(wallet.publicKey)
-      );
+      )
       const isTokenClaimed = reimbursementAccount
         ? await reimbursementClient!.reimbursed(reimbursementAccount, mintIndex)
-        : false;
+        : false
 
       if (!isTokenClaimed) {
         const [ataPk, daoAtaPk] = await Promise.all([
@@ -213,12 +215,12 @@ const MainPage = () => {
             group?.account.claimTransferDestination!,
             true
           ),
-        ]);
+        ])
 
         const isExistingAta = await isExistingTokenAccount(
           connection.current,
           ataPk
-        );
+        )
         if (!isExistingAta) {
           instructions.push(
             Token.createAssociatedTokenAccountInstruction(
@@ -229,7 +231,7 @@ const MainPage = () => {
               owner, // owner of token account
               owner // fee payer
             )
-          );
+          )
         }
 
         instructions.push(
@@ -246,7 +248,7 @@ const MainPage = () => {
               table: group?.account.table,
             })
             .instruction()
-        );
+        )
         if (isWSolMint) {
           const unwrapAllSol = Token.createCloseAccountInstruction(
             TOKEN_PROGRAM_ID,
@@ -254,18 +256,18 @@ const MainPage = () => {
             wallet.publicKey!,
             wallet.publicKey!,
             []
-          );
-          instructions.push(unwrapAllSol);
+          )
+          instructions.push(unwrapAllSol)
         }
       }
     }
 
-    return instructions;
-  };
+    return instructions
+  }
   const handleReimbursement = async (transferClaim: boolean) => {
-    setTransferLoading(true);
+    setTransferLoading(true)
     try {
-      const group = await getCurrentGroup();
+      const group = await getCurrentGroup()
       const reimbursementAccount = (
         await PublicKey.findProgramAddress(
           [
@@ -275,66 +277,67 @@ const MainPage = () => {
           ],
           reimbursementClient!.program.programId
         )
-      )[0];
+      )[0]
       const accountInstructions = await getReimbursementAccountInstructions(
         group,
         reimbursementAccount
-      );
+      )
       const reimburseInstructions = await getReimbursementInstructions(
         group,
         reimbursementAccount,
         transferClaim
-      );
-      const reimburseInstructionsChunks = chunks([...reimburseInstructions], 4);
+      )
+      const reimburseInstructionsChunks = chunks([...reimburseInstructions], 4)
       const instructionsToSend = [
         ...accountInstructions.map((x) => {
           return {
             instructionsSet: [x].map((j) => {
-              return { transactionInstruction: j, signers: [] };
+              return { transactionInstruction: j, signers: [] }
             }),
             sequenceType: SequenceType.Sequential,
-          };
+          }
         }),
         ...reimburseInstructionsChunks.map((x) => {
           return {
             instructionsSet: x.map((j) => {
-              return { transactionInstruction: j, signers: [] };
+              return { transactionInstruction: j, signers: [] }
             }),
             sequenceType: SequenceType.Sequential,
-          };
+          }
         }),
-      ];
+      ]
 
       await sendSignAndConfirmTransactions({
         connection: connection.current,
         wallet,
         transactionInstructions: instructionsToSend,
-      });
-      getReimbursementAccount(group);
+      })
+      getReimbursementAccount(group)
+      setIsAgreementModalOpen(false)
       notify({
         title: "Successful reimbursement",
         type: "success",
-      });
+      })
     } catch (e) {
       notify({
         title: "Something wen't wrong",
         description: `${e.message}`,
         txid: e?.txid,
         type: "error",
-      });
+      })
     }
-    setTransferLoading(false);
-  };
+    setTransferLoading(false)
+  }
 
   useEffect(() => {
     if (reimbursementClient) {
       if (wallet.publicKey) {
-        getAccountAmountsInfo(wallet.publicKey);
+        getAccountAmountsInfo(wallet.publicKey)
       } else {
-        resetAmountState();
+        resetAmountState()
       }
     }
-  }, [reimbursementClient !== null, wallet.publicKey?.toBase58()]);
+  }, [reimbursementClient !== null, wallet.publicKey?.toBase58()])
 
   return (
     <div className="flex min-h-[400px] flex-col items-center p-4 pt-[50px]">
@@ -454,8 +457,15 @@ const MainPage = () => {
             ) : null}
           </div>
           <div className="mt-4 flex justify-center">
+            {isAgreementModalOpen && (
+              <AgreementModal
+                isOpen={isAgreementModalOpen}
+                onClose={setIsAgreementModalOpen}
+                onAggree={() => handleReimbursement(transferClaim)}
+              ></AgreementModal>
+            )}
             <Button
-              onClick={() => handleReimbursement(transferClaim)}
+              onClick={() => setIsAgreementModalOpen(true)}
               disabled={transferLoading || !table.length || hasClaimedAll}
               className="px-14 py-3 text-base"
             >
@@ -463,9 +473,9 @@ const MainPage = () => {
             </Button>
           </div>
         </div>
+      </div>
     </div>
-  </div>
-  );
-};
+  )
+}
 
-export default MainPage;
+export default MainPage
