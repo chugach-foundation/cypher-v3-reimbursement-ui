@@ -21,7 +21,10 @@ import { Config } from "@blockworks-foundation/mango-client"
 import { notify } from "utils/notifications"
 import Loading from "components/Loading"
 import { WalletIcon } from "components"
-import { ExclamationCircleIcon } from "@heroicons/react/solid"
+import {
+  CurrencyDollarIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/solid"
 import TableRow from "components/reimbursement_page/TableRow"
 import {
   MintInfo,
@@ -427,7 +430,7 @@ const MainPage = () => {
 
   return (
     <div className="flex min-h-[400px] flex-col items-center p-4 pb-10 pt-[50px]">
-      <div className="flex w-4/5 flex-col sm:w-2/3 xl:w-1/2">
+      <div className="flex w-full flex-col md:w-4/5 lg:w-2/3 xl:w-1/2">
         <h1 className="mb-3">Mango v3 Exploit Refund</h1>
         <p className="text-base text-th-fgd-2">
           Claim your lost tokens as approved by the{" "}
@@ -442,29 +445,33 @@ const MainPage = () => {
           the refund amounts are combined.
         </p>
         {wallet.connected ? (
-          <>
-            <div className="flex items-center pb-4 pt-6">
-              <h3 className="mr-3">Connected Wallet:</h3>
-              <div className="flex flex-row items-center rounded-full bg-th-bkg-3 py-1 px-3 text-xs">
+          <div className="mb-4 mt-2 grid grid-cols-2 rounded-md bg-th-bkg-2 px-4 pt-3 pb-1">
+            <div className="col-span-2 pb-4 md:col-span-1">
+              <h3 className="mb-2">Connected Wallet:</h3>
+              <div className="flex w-max flex-row items-center rounded-full bg-th-bkg-4 py-1 px-3 text-xs">
                 <WalletIcon className="mr-2 h-4 w-4 text-th-green"></WalletIcon>
                 {abbreviateAddress(wallet.publicKey!)}
               </div>
             </div>
             {mangoAccounts?.length && table.length ? (
-              <div className="flex flex-col pb-4 pt-1">
-                <h3 className="mr-3">Mango Accounts:</h3>
-                <div className="mt-2 flex flex-wrap">
+              <div className="col-span-2 pb-4 md:col-span-1">
+                <h3>{mangoAccounts.length} Mango Accounts:</h3>
+                <div className="flex flex-wrap">
                   {mangoAccounts.map((mangoAccount) => {
                     return (
-                      <div className="pl-8 text-xs text-th-fgd-4">
-                        {mangoAccount.publicKey.toString()}
+                      <div className="mt-2 mr-2 flex flex-row items-center rounded-full bg-th-bkg-4 py-1 px-3 text-xs">
+                        <CurrencyDollarIcon className="mr-2 h-4 w-4 text-th-fgd-3"></CurrencyDollarIcon>
+                        {abbreviateAddress(mangoAccount.publicKey!)}
                       </div>
+                      // <div className="pl-8 text-xs text-th-fgd-4">
+                      //   {mangoAccount.publicKey.toString()}
+                      // </div>
                     )
                   })}
                 </div>
               </div>
             ) : null}
-          </>
+          </div>
         ) : null}
         <div className="flex items-center pb-4 pt-1">
           <h3 className="mr-3">Your Refund:</h3>
