@@ -514,6 +514,7 @@ const MainPage = () => {
           <div className="mt-8 flex justify-center">
             {isAgreementModalOpen && (
               <AgreementModal
+                isLoading={transferLoading}
                 isOpen={isAgreementModalOpen}
                 onClose={() => setIsAgreementModalOpen(false)}
                 onAggree={() => handleReimbursement(transferClaim)}

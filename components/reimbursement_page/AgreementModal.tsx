@@ -1,15 +1,17 @@
 import Button from "components/Button"
+import Loading from "components/Loading"
 import Modal from "components/Modal"
-import { ElementTitle } from "components/styles"
 
 const AgreementModal = ({
   isOpen,
   onClose,
   onAggree,
+  isLoading,
 }: {
   isOpen: boolean
   onClose?: (x) => void
   onAggree: () => void
+  isLoading: boolean
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -25,8 +27,8 @@ const AgreementModal = ({
         </div>
       </div>
       <div className="flex justify-center">
-        <Button className="mt-2 px-8" onClick={onAggree}>
-          I Agree
+        <Button disabled={isLoading} className="mt-2 px-8" onClick={onAggree}>
+          {isLoading ? <Loading></Loading> : "I Agree"}
         </Button>
       </div>
     </Modal>
