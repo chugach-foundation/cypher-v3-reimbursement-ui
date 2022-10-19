@@ -4,33 +4,33 @@ import React, {
   useState,
   useMemo,
   useEffect,
-} from "react";
-import { Menu, Transition } from "@headlessui/react";
-import { useWallet, Wallet } from "@solana/wallet-adapter-react";
-import { WalletReadyState } from "@solana/wallet-adapter-base";
+} from "react"
+import { Menu, Transition } from "@headlessui/react"
+import { useWallet, Wallet } from "@solana/wallet-adapter-react"
+import { WalletReadyState } from "@solana/wallet-adapter-base"
 import {
   CurrencyDollarIcon,
   LogoutIcon,
   UserCircleIcon,
-} from "@heroicons/react/outline";
-import { notify } from "utils/notifications";
-import { abbreviateAddress } from "utils";
-import useMangoStore from "stores/useMangoStore";
-import { WalletIcon } from "./icons";
-import { useTranslation } from "next-i18next";
-import { WalletSelect } from "components/WalletSelect";
-import AccountsModal from "./AccountsModal";
-import uniqBy from "lodash/uniqBy";
-import ProfileImage from "./ProfileImage";
-import { useRouter } from "next/router";
-import { PublicKey } from "@solana/web3.js";
-import { breakpoints } from "../components/TradePageGrid";
-import { useViewport } from "hooks/useViewport";
-import Loading from "./Loading";
+} from "@heroicons/react/outline"
+import { notify } from "utils/notifications"
+import { abbreviateAddress } from "utils"
+import useMangoStore from "stores/useMangoStore"
+import { WalletIcon } from "./icons"
+import { useTranslation } from "next-i18next"
+import { WalletSelect } from "components/WalletSelect"
+import AccountsModal from "./AccountsModal"
+import uniqBy from "lodash/uniqBy"
+import ProfileImage from "./ProfileImage"
+import { useRouter } from "next/router"
+import { PublicKey } from "@solana/web3.js"
+import { breakpoints } from "../components/TradePageGrid"
+import { useViewport } from "hooks/useViewport"
+import Loading from "./Loading"
 
 export const handleWalletConnect = (wallet: Wallet) => {
   if (!wallet) {
-    return;
+    return
   }
 
   return wallet?.adapter?.connect().catch((e) => {
@@ -39,83 +39,83 @@ export const handleWalletConnect = (wallet: Wallet) => {
         title: `${wallet.adapter.name} Error`,
         type: "error",
         description: `Please install ${wallet.adapter.name} and then reload this page.`,
-      });
+      })
     }
-  });
-};
+  })
+}
 
 export const ConnectWalletButton: React.FC = () => {
-  const { connected, publicKey, wallet, wallets, select } = useWallet();
-  const { t } = useTranslation(["common", "profile"]);
-  const router = useRouter();
-  const set = useMangoStore((s) => s.set);
-  const mangoGroup = useMangoStore((s) => s.selectedMangoGroup.current);
-  const [showAccountsModal, setShowAccountsModal] = useState(false);
-  const [connecting, setConnecting] = useState(false);
-  const actions = useMangoStore((s) => s.actions);
-  const profileDetails = useMangoStore((s) => s.profile.details);
-  const loadProfileDetails = useMangoStore((s) => s.profile.loadDetails);
-  const { width } = useViewport();
-  const isMobile = width ? width < breakpoints.md : false;
+  const { connected, publicKey, wallet, wallets, select } = useWallet()
+  const { t } = useTranslation(["common", "profile"])
+  const router = useRouter()
+  const set = useMangoStore((s) => s.set)
+  const mangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
+  const [showAccountsModal, setShowAccountsModal] = useState(false)
+  const [connecting, setConnecting] = useState(false)
+  const actions = useMangoStore((s) => s.actions)
+  const profileDetails = useMangoStore((s) => s.profile.details)
+  const loadProfileDetails = useMangoStore((s) => s.profile.loadDetails)
+  const { width } = useViewport()
+  const isMobile = width ? width < breakpoints.md : false
 
   useEffect(() => {
     if (publicKey) {
-      actions.fetchProfileDetails(publicKey.toString());
+      actions.fetchProfileDetails(publicKey.toString())
     }
-  }, [publicKey]);
+  }, [publicKey])
 
   const installedWallets = useMemo(() => {
-    const installed: Wallet[] = [];
+    const installed: Wallet[] = []
 
     for (const wallet of wallets) {
       if (wallet.readyState === WalletReadyState.Installed) {
-        installed.push(wallet);
+        installed.push(wallet)
       }
     }
 
-    return installed?.length ? installed : wallets;
-  }, [wallets]);
+    return installed?.length ? installed : wallets
+  }, [wallets])
 
   const displayedWallets = useMemo(() => {
     return uniqBy([...installedWallets, ...wallets], (w) => {
-      return w.adapter.name;
-    });
-  }, [wallets, installedWallets]);
+      return w.adapter.name
+    })
+  }, [wallets, installedWallets])
 
   const handleConnect = useCallback(() => {
     if (wallet) {
-      setConnecting(true);
-      handleWalletConnect(wallet)?.then(() => setConnecting(false));
+      setConnecting(true)
+      handleWalletConnect(wallet)?.then(() => setConnecting(false))
     }
-  }, [wallet]);
+  }, [wallet])
 
   const handleCloseAccounts = useCallback(() => {
-    setShowAccountsModal(false);
-  }, []);
+    setShowAccountsModal(false)
+  }, [])
 
   const handleDisconnect = useCallback(() => {
-    wallet?.adapter?.disconnect();
+    wallet?.adapter?.disconnect()
     set((state) => {
-      state.mangoAccounts = [];
-      state.selectedMangoAccount.current = null;
+      state.mangoAccounts = []
+      state.selectedMangoAccount.current = null
       state.tradeHistory = {
         spot: [],
         perp: [],
         parsed: [],
         initialLoad: false,
-      };
-    });
+      }
+    })
     notify({
       type: "info",
       title: t("wallet-disconnected"),
-    });
-  }, [wallet, set, t]);
+    })
+  }, [wallet, set, t])
 
   useEffect(() => {
     if (!wallet && displayedWallets?.length) {
-      select(displayedWallets[0].adapter.name);
+      select(displayedWallets[0].adapter.name)
     }
-  }, [wallet, displayedWallets, select]);
+  }, [wallet, displayedWallets, select])
 
   return (
     <>
@@ -160,7 +160,7 @@ export const ConnectWalletButton: React.FC = () => {
                 leaveTo="opacity-0"
               >
                 <Menu.Items className="absolute right-0 z-20 mt-1 w-48 space-y-1.5 rounded-md bg-th-bkg-2 px-4 py-2.5">
-                  <Menu.Item>
+                  {/* <Menu.Item>
                     <button
                       className="flex w-full flex-row items-center rounded-none py-0.5 font-normal hover:cursor-pointer hover:text-th-primary focus:outline-none"
                       onClick={() => setShowAccountsModal(true)}
@@ -168,7 +168,7 @@ export const ConnectWalletButton: React.FC = () => {
                       <CurrencyDollarIcon className="h-4 w-4" />
                       <div className="pl-2 text-left">{t("accounts")}</div>
                     </button>
-                  </Menu.Item>
+                  </Menu.Item> */}
                   <Menu.Item>
                     <button
                       className="flex w-full flex-row items-center rounded-none py-0.5 font-normal hover:cursor-pointer focus:outline-none md:hover:text-th-primary"
@@ -224,5 +224,5 @@ export const ConnectWalletButton: React.FC = () => {
         />
       )}
     </>
-  );
-};
+  )
+}

@@ -1,55 +1,55 @@
-import { CheckIcon, XIcon } from "@heroicons/react/solid";
-import { useState, useEffect } from "react";
-import useReimbursementStore from "stores/useReimbursementStore";
-import { usdFormatter } from "utils";
-import { toDecimalAmount } from "utils/tools";
-import { MintInfo, ReimbursementAccount, TableInfo } from "./types";
+import { CheckIcon, XIcon } from "@heroicons/react/solid"
+import { useState, useEffect } from "react"
+import useReimbursementStore from "stores/useReimbursementStore"
+import { usdFormatter } from "utils"
+import { toDecimalAmount } from "utils/tools"
+import { MintInfo, ReimbursementAccount, TableInfo } from "./types"
 
 const TableRow = ({
   mintsForAvailableAmounts,
   item,
   reimbursementAccount,
 }: {
-  mintsForAvailableAmounts: { [key: string]: MintInfo };
-  item: TableInfo;
-  reimbursementAccount: ReimbursementAccount | null;
+  mintsForAvailableAmounts: { [key: string]: MintInfo }
+  item: TableInfo
+  reimbursementAccount: ReimbursementAccount | null
 }) => {
-  const { reimbursementClient } = useReimbursementStore();
-  const mintPk = item.mintPubKey;
-  const symbol = mintsForAvailableAmounts[mintPk.toBase58()]?.symbol;
-  const mintInfo = mintsForAvailableAmounts[mintPk.toBase58()];
-  const [isClaimed, setIsClaimed] = useState(false);
+  const { reimbursementClient } = useReimbursementStore()
+  const mintPk = item.mintPubKey
+  const symbol = mintsForAvailableAmounts[mintPk.toBase58()]?.symbol
+  const mintInfo = mintsForAvailableAmounts[mintPk.toBase58()]
+  const [isClaimed, setIsClaimed] = useState(false)
   const handleSetIsReimbused = async () => {
     const isTokenClaimed = await reimbursementClient!.reimbursed(
       reimbursementAccount,
       item.index
-    );
-    setIsClaimed(isTokenClaimed);
-  };
+    )
+    setIsClaimed(isTokenClaimed)
+  }
   useEffect(() => {
     if (reimbursementClient && reimbursementAccount) {
-      handleSetIsReimbused();
+      handleSetIsReimbused()
     } else {
-      setIsClaimed(false);
+      setIsClaimed(false)
     }
   }, [
     reimbursementClient !== null,
     reimbursementAccount && JSON.stringify(reimbursementAccount),
-  ]);
+  ])
   return (
-    <div className="grid grid-cols-12 items-center gap-3 text-xs">
-      <div className="col-span-1">
-        <img
-          className="w-5"
-          src={`assets/icons/${symbol.toLocaleLowerCase()}.svg`}
-        ></img>
-      </div>
-      <div className="col-span-7 flex flex-col overflow-hidden">
-        <div className="">{symbol}</div>
-        <div>{mintPk.toBase58()}</div>
+    <div className="grid grid-cols-12 items-center gap-3 rounded-md border border-th-bkg-3 p-4">
+      <div className="col-span-5 flex flex-col overflow-hidden">
+        <div className="flex items-center text-sm text-th-fgd-1">
+          <img
+            className="mr-2 w-5"
+            src={`assets/icons/${symbol.toLocaleLowerCase()}.svg`}
+          ></img>
+          {symbol}
+        </div>
+        {/* <div>{mintPk.toBase58()}</div> */}
       </div>
 
-      <div className="col-span-2">
+      <div className="col-span-4 text-right">
         {mintInfo
           ? usdFormatter(
               toDecimalAmount(item.nativeAmount, mintInfo.decimals),
@@ -58,7 +58,7 @@ const TableRow = ({
             )
           : null}
       </div>
-      <div className="col-span-2">
+      <div className="col-span-3 flex justify-end">
         {isClaimed ? (
           <CheckIcon className="w-5"></CheckIcon>
         ) : (
@@ -66,7 +66,7 @@ const TableRow = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default TableRow;
+export default TableRow
