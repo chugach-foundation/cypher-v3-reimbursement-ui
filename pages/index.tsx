@@ -17,25 +17,19 @@ import { TOKEN_PROGRAM_ID } from "@project-serum/serum/lib/token-instructions"
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token"
 import { sendSignAndConfirmTransactions } from "@blockworks-foundation/mangolana/lib/transactions"
 import { SequenceType } from "@blockworks-foundation/mangolana/lib/globalTypes"
-import { Config, sleep } from "@blockworks-foundation/mango-client"
+import { Config } from "@blockworks-foundation/mango-client"
 import { notify } from "utils/notifications"
 import Loading from "components/Loading"
 import { WalletIcon } from "components"
-import {
-  CurrencyDollarIcon,
-  ExclamationCircleIcon,
-} from "@heroicons/react/solid"
+import { ExclamationCircleIcon } from "@heroicons/react/solid"
 import TableRow from "components/reimbursement_page/TableRow"
-import EmptyTableRows from "components/reimbursement_page/EmptyRow"
 import {
   MintInfo,
   ReimbursementAccount,
   TableInfo,
 } from "components/reimbursement_page/types"
-import Checkbox from "components/Checkbox"
 import { abbreviateAddress } from "utils"
 import AgreementModal from "components/reimbursement_page/AgreementModal"
-import { mangoAccountSelector } from "stores/selectors"
 
 const GROUP_NUM = 1
 
@@ -70,9 +64,9 @@ const MainPage = () => {
   const [transferLoading, setTransferLoading] = useState(false)
   const [reimbursementAccount, setReimbursementAccount] =
     useState<ReimbursementAccount | null>(null)
-  const [transferClaim, setTransferClaim] = useState(false)
+  const [toLowAmountInOneOfVaults, setToLowAmountInOneOfVaults] =
+    useState(false)
   const mangoAccounts = useMangoStore((s) => s.mangoAccounts)
-
   const hasClaimedAll =
     reimbursementAccount !== null &&
     reimbursementAccount.reimbursed !== 0 &&
@@ -106,13 +100,26 @@ const MainPage = () => {
     const group = result.find((group) => group.account.groupNum === GROUP_NUM)
     return group
   }
+  const getAreAmountsInVaultHighEnough = async (tableInfo: TableInfo[]) => {
+    const group = await getCurrentGroup()
+    const vaultsPks = [...tableInfo.map((x) => group!.account.vaults[x.index]!)]
+    const amounts = await Promise.all([
+      ...vaultsPks.map((x) => connection.current.getTokenAccountBalance(x)),
+    ])
+
+    const areAmountsInVaultHighEnough = amounts.every(
+      (x, idx) =>
+        new BN(x.value.amount).cmp(tableInfo[idx].nativeAmount) === 0 ||
+        new BN(x.value.amount).cmp(tableInfo[idx].nativeAmount) === 1
+    )
+    return areAmountsInVaultHighEnough
+  }
   const getAccountAmountsInfo = async (walletPk: PublicKey) => {
     setAmountsLoading(true)
     try {
       const group = await getCurrentGroup()
       const config = Config.ids()
       const groupIds = config.getGroup(connection.cluster, groupName.name)
-
       const table = await tryDecodeTable(reimbursementClient, group)
       const balancesForUser = table.find((row) =>
         row.owner.equals(wallet.publicKey)
@@ -150,6 +157,9 @@ const MainPage = () => {
         }
         setMintsForAvailableAmounts(mintInfos)
         setTable(tableInfo)
+        const areAmountsInVaultHighEnough =
+          await getAreAmountsInVaultHighEnough(tableInfo)
+        setToLowAmountInOneOfVaults(!areAmountsInVaultHighEnough)
         await getReimbursementAccount(group)
       } else {
         resetAmountState()
@@ -313,7 +323,18 @@ const MainPage = () => {
           }
         }),
       ]
-
+      const areAmountsInVaultHighEnough = await getAreAmountsInVaultHighEnough(
+        table
+      )
+      if (!areAmountsInVaultHighEnough) {
+        notify({
+          title: "not enough funds in vaults info",
+          description: "not enough funds in vaults info",
+          type: "error",
+        })
+        setTransferLoading(false)
+        return
+      }
       await sendSignAndConfirmTransactions({
         connection: connection.current,
         wallet,
@@ -492,7 +513,6 @@ const MainPage = () => {
             </span>
           </div>
         )}
-
         <div className="flex flex-col justify-end">
           <div className="flex flex-col">
             {/* {wallet.connected && (
@@ -535,6 +555,9 @@ const MainPage = () => {
               </div>
             ) : null}
           </div>
+          {toLowAmountInOneOfVaults && (
+            <div>Not enough funds in vaults info</div>
+          )}
           <div className="mt-8 flex justify-center">
             {isAgreementModalOpen && (
               <AgreementModal
@@ -542,14 +565,18 @@ const MainPage = () => {
                 isOpen={isAgreementModalOpen}
                 onClose={() => setIsAgreementModalOpen(false)}
                 onAggree={() => {
-                  setTransferClaim(true)
                   handleReimbursement(true)
                 }}
               ></AgreementModal>
             )}
             <Button
               onClick={() => setIsAgreementModalOpen(true)}
-              disabled={transferLoading || !table.length || hasClaimedAll}
+              disabled={
+                transferLoading ||
+                !table.length ||
+                hasClaimedAll ||
+                toLowAmountInOneOfVaults
+              }
               className="px-16 py-3 text-base"
             >
               {transferLoading ? <Loading></Loading> : "Claim Tokens"}
