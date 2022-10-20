@@ -450,8 +450,8 @@ const MainPage = () => {
           the recovery amounts are combined.
         </p>
         {wallet.connected ? (
-          <div className="mb-4 mt-2 grid grid-cols-2 divide-x divide-th-bkg-3 rounded-md bg-th-bkg-2 px-4">
-            <div className="col-span-2 py-4 md:col-span-1">
+          <div className="mb-4 mt-2 grid grid-cols-2 rounded-md bg-th-bkg-2 px-4 md:divide-x md:divide-th-bkg-3">
+            <div className="col-span-2 pt-4 md:col-span-1 md:pb-4">
               <h3 className="mb-2 text-sm font-normal text-th-fgd-2">
                 Connected Wallet:
               </h3>
@@ -461,7 +461,7 @@ const MainPage = () => {
               </div>
             </div>
             {mangoAccounts?.length && table.length ? (
-              <div className="col-span-2 py-4 pl-4 md:col-span-1">
+              <div className="col-span-2 py-4 md:col-span-1 md:pl-4">
                 <h3 className="text-sm font-normal text-th-fgd-2">
                   {mangoAccounts.length} Mango Account
                   {mangoAccounts.length === 1 ? "" : "s"}:
