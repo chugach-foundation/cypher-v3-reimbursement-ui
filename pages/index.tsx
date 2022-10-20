@@ -431,7 +431,7 @@ const MainPage = () => {
   return (
     <div className="flex min-h-[400px] flex-col items-center p-4 pb-10 pt-[50px]">
       <div className="flex w-full flex-col md:w-4/5 lg:w-2/3 xl:w-1/2">
-        <h1 className="mb-3">Mango v3 Exploit Refund</h1>
+        <h1 className="mb-3">Mango v3 Exploit Recovery</h1>
         <p className="text-base text-th-fgd-2">
           Claim your lost tokens as approved by the{" "}
           <a
@@ -442,7 +442,7 @@ const MainPage = () => {
             DAO vote
           </a>
           . If you have more than one Mango Account for your connected wallet
-          the refund amounts are combined.
+          the recovery amounts are combined.
         </p>
         {wallet.connected ? (
           <div className="mb-4 mt-2 grid grid-cols-2 rounded-md bg-th-bkg-2 px-4 pt-3 pb-1">
@@ -474,7 +474,7 @@ const MainPage = () => {
           </div>
         ) : null}
         <div className="flex items-center pb-4 pt-1">
-          <h3 className="mr-3">Your Refund:</h3>
+          <h3 className="mr-3">Your Tokens:</h3>
         </div>
         {wallet.connected ? (
           <div>
