@@ -169,7 +169,6 @@ const MainPage = () => {
           await getAreAmountsInVaultHighEnough(tableInfo)
         setToLowAmountInOneOfVaults(!areAmountsInVaultHighEnough)
         await handleSetReimbursementAccount(group)
-        handleSetReimbursementAccountWithDelay(group, 10000)
       } else {
         resetAmountState()
       }
@@ -351,6 +350,7 @@ const MainPage = () => {
         transactionInstructions: instructionsToSend,
       })
       handleSetReimbursementAccount(group)
+      handleSetReimbursementAccountWithDelay(group, 10000)
       setIsAgreementModalOpen(false)
       notify({
         title: "Successful reimbursement",
