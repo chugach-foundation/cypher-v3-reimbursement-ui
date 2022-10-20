@@ -437,7 +437,7 @@ const MainPage = () => {
     <div className="flex min-h-[400px] flex-col items-center p-4 pb-10 pt-[50px]">
       <div className="flex w-full flex-col md:w-4/5 lg:w-2/3 xl:w-1/2">
         <h1 className="mb-3">Mango v3 Exploit Recovery</h1>
-        <p className="text-base text-th-fgd-2">
+        <p className="text-base text-th-fgd-3">
           Claim your lost tokens as approved by the{" "}
           <a
             href="https://app.realms.today/dao/MNGO/proposal/HRR4ydbGUYYTCUgr7KvKdWW87HzCQy9Fu6aL8X5BMFUT"
@@ -450,17 +450,19 @@ const MainPage = () => {
           the recovery amounts are combined.
         </p>
         {wallet.connected ? (
-          <div className="mb-4 mt-2 grid grid-cols-2 rounded-md bg-th-bkg-2 px-4 pt-3 pb-1">
-            <div className="col-span-2 pb-4 md:col-span-1">
-              <h3 className="mb-2">Connected Wallet:</h3>
+          <div className="mb-4 mt-2 grid grid-cols-2 divide-x divide-th-bkg-3 rounded-md bg-th-bkg-2 px-4">
+            <div className="col-span-2 py-4 md:col-span-1">
+              <h3 className="mb-2 text-sm font-normal text-th-fgd-2">
+                Connected Wallet:
+              </h3>
               <div className="flex w-max flex-row items-center rounded-full bg-th-bkg-4 py-1 px-3 text-xs">
                 <WalletIcon className="mr-2 h-4 w-4 text-th-green"></WalletIcon>
                 {abbreviateAddress(wallet.publicKey!)}
               </div>
             </div>
             {mangoAccounts?.length && table.length ? (
-              <div className="col-span-2 pb-4 md:col-span-1">
-                <h3>
+              <div className="col-span-2 py-4 pl-4 md:col-span-1">
+                <h3 className="text-sm font-normal text-th-fgd-2">
                   {mangoAccounts.length} Mango Account
                   {mangoAccounts.length === 1 ? "" : "s"}:
                 </h3>
@@ -510,7 +512,7 @@ const MainPage = () => {
                 ) : (
                   <div className="flex items-center justify-center rounded-md border border-th-bkg-3 p-4">
                     <ExclamationCircleIcon className="mr-2 w-5"></ExclamationCircleIcon>{" "}
-                    No tokens to refund for your connected wallet
+                    No tokens to recover for your connected wallet
                   </div>
                 )}
               </div>
@@ -519,26 +521,17 @@ const MainPage = () => {
         ) : (
           <div className="flex w-full flex-col items-center justify-center rounded-lg border border-th-bkg-3 p-6">
             <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-th-bkg-3">
-              <WalletIcon className="h-6 w-6"></WalletIcon>
+              <WalletIcon className="h-6 w-6 text-th-primary"></WalletIcon>
             </div>
-            <span className="text-center text-base">
+            <span className="text-center text-base text-th-fgd-3">
               Connect an eligible wallet
               <br />
-              to claim your refund
+              to view your claimable tokens
             </span>
           </div>
         )}
         <div className="flex flex-col justify-end">
           <div className="flex flex-col">
-            {/* {wallet.connected && (
-              // <Checkbox
-              //   disabled={transferLoading || !table.length || hasClaimedAll}
-              //   checked={transferClaim}
-              //   onChange={(e) => setTransferClaim(e.target.checked)}
-              // >
-              //   Transfer legal claim to dao
-              // </Checkbox>
-            )} */}
             {wallet.connected && table.length ? (
               <div className="pt-6 text-xs text-th-fgd-3">
                 <div className="text-sm">
@@ -570,7 +563,7 @@ const MainPage = () => {
               </div>
             ) : null}
           </div>
-          <div className="mt-6 flex justify-center">
+          <div className="mt-8 flex justify-center">
             {isAgreementModalOpen && (
               <AgreementModal
                 isLoading={transferLoading}
@@ -589,7 +582,7 @@ const MainPage = () => {
                 hasClaimedAll ||
                 toLowAmountInOneOfVaults
               }
-              className="px-16 py-3 text-base"
+              className="h-14 w-48 text-lg"
             >
               {transferLoading ? <Loading></Loading> : "Claim Tokens"}
             </Button>
