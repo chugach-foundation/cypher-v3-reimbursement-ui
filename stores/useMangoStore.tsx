@@ -555,32 +555,18 @@ const useMangoStore = create<
 
           if (!wallet?.adapter?.publicKey || !mangoGroup) return
 
-          const delegateFilter = [
-            {
-              memcmp: {
-                offset: MangoAccountLayout.offsetOf("delegate"),
-                bytes: wallet.adapter.publicKey?.toBase58(),
-              },
-            },
-          ]
           const accountSorter = (a, b) =>
             a.publicKey.toBase58() > b.publicKey.toBase58() ? 1 : -1
 
-          return Promise.all([
-            mangoClient.getMangoAccountsForOwner(
+          return mangoClient
+            .getMangoAccountsForOwner(
               mangoGroup,
               wallet.adapter.publicKey,
               true
-            ),
-            mangoClient.getAllMangoAccounts(mangoGroup, delegateFilter, false),
-          ])
-            .then((values) => {
-              const [mangoAccounts, delegatedAccounts] = values
-              if (mangoAccounts.length + delegatedAccounts.length > 0) {
-                const sortedAccounts = mangoAccounts
-                  .slice()
-                  .sort(accountSorter)
-                  .concat(delegatedAccounts.sort(accountSorter))
+            )
+            .then((mangoAccounts) => {
+              if (mangoAccounts?.length > 0) {
+                const sortedAccounts = mangoAccounts.slice().sort(accountSorter)
 
                 set((state) => {
                   state.selectedMangoAccount.initialLoad = false
