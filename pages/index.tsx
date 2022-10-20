@@ -71,11 +71,34 @@ const MainPage = () => {
   const [toLowAmountInOneOfVaults, setToLowAmountInOneOfVaults] =
     useState(false)
   const mangoAccounts = useMangoStore((s) => s.mangoAccounts)
-  const hasClaimedAll =
-    reimbursementAccount !== null &&
-    reimbursementAccount.reimbursed !== 0 &&
-    reimbursementAccount.claimTransferred !== 0 &&
-    reimbursementAccount.claimTransferred === reimbursementAccount.reimbursed
+  const [hasClaimedAll, setHasClaimedAll] = useState(false)
+  // const hasClaimedAll =
+  //   reimbursementAccount !== null &&
+  //   reimbursementAccount.reimbursed !== 0 &&
+  //   reimbursementAccount.claimTransferred !== 0 &&
+  //   reimbursementAccount.claimTransferred === reimbursementAccount.reimbursed
+
+  useEffect(() => {
+    const checkClaimStatus = async () => {
+      let allClaimed = false
+      for (const item of table) {
+        const isTokenClaimed = await reimbursementClient!.reimbursed(
+          reimbursementAccount,
+          item.index
+        )
+        if (!isTokenClaimed) {
+          allClaimed = false
+          break
+        } else {
+          allClaimed = true
+        }
+      }
+      setHasClaimedAll(allClaimed)
+    }
+    if (table && reimbursementClient && reimbursementAccount) {
+      checkClaimStatus()
+    }
+  }, [table, reimbursementClient, reimbursementAccount])
 
   const resetAmountState = () => {
     setMintsForAvailableAmounts({})
