@@ -31,7 +31,7 @@ import {
   ReimbursementAccount,
   TableInfo,
 } from "components/reimbursement_page/types"
-import { abbreviateAddress } from "utils"
+import { abbreviateAddress, sleep } from "utils"
 import AgreementModal from "components/reimbursement_page/AgreementModal"
 import Link from "next/link"
 
@@ -82,7 +82,11 @@ const MainPage = () => {
     setTable([])
     setReimbursementAccount(null)
   }
-  const getReimbursementAccount = async (group) => {
+  const handleSetReimbursementAccountWithDelay = async (group, delayMs) => {
+    await sleep(delayMs)
+    handleSetReimbursementAccount(group)
+  }
+  const handleSetReimbursementAccount = async (group) => {
     const reimbursementAccount = (
       await PublicKey.findProgramAddress(
         [
@@ -164,7 +168,8 @@ const MainPage = () => {
         const areAmountsInVaultHighEnough =
           await getAreAmountsInVaultHighEnough(tableInfo)
         setToLowAmountInOneOfVaults(!areAmountsInVaultHighEnough)
-        await getReimbursementAccount(group)
+        await handleSetReimbursementAccount(group)
+        handleSetReimbursementAccountWithDelay(group, 10000)
       } else {
         resetAmountState()
       }
@@ -345,7 +350,7 @@ const MainPage = () => {
         wallet,
         transactionInstructions: instructionsToSend,
       })
-      getReimbursementAccount(group)
+      handleSetReimbursementAccount(group)
       setIsAgreementModalOpen(false)
       notify({
         title: "Successful reimbursement",
