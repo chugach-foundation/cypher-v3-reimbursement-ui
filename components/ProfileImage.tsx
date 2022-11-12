@@ -1,5 +1,5 @@
-import useMangoStore from 'stores/useMangoStore'
-import { ProfileIcon } from './icons'
+import useMangoStore from "stores/useMangoStore"
+import { ProfileIcon } from "./icons"
 
 const ProfileImage = ({
   imageSize,
@@ -14,7 +14,8 @@ const ProfileImage = ({
 }) => {
   const profile = useMangoStore((s) => s.profile.details)
 
-  return imageUrl || (isOwnerProfile && profile.profile_image_url) ? (
+  return imageUrl ||
+    (profile && isOwnerProfile && profile?.profile_image_url) ? (
     <img
       alt=""
       src={imageUrl ? imageUrl : profile.profile_image_url}
