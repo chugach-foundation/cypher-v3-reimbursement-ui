@@ -1,6 +1,43 @@
 import { TokenAccountLayout } from "@blockworks-foundation/mango-client";
 import { PublicKey, Connection } from "@solana/web3.js";
 import { AccountInfo } from "@solana/spl-token";
+import { CLUSTER } from "stores/useMangoStore";
+
+
+export interface TokenConfig {
+  symbol: string;
+  mintKey: PublicKey;
+  decimals: number;
+  index: number;
+}
+
+export const devnetTokens : TokenConfig[] = [
+  {
+      symbol : 'SOL',
+      mintKey :  new PublicKey('So11111111111111111111111111111111111111112'),
+      decimals : 9,
+      index : 0
+  }
+
+]
+
+export const mainnetTokens : TokenConfig[] = [
+  {
+      symbol : 'SOL',
+      mintKey :  new PublicKey('So11111111111111111111111111111111111111112'),
+      decimals : 9,
+      index : 0
+  },
+  {
+      symbol : 'BTC',
+      mintKey :  new PublicKey('So11111111111111111111111111111111111111112'),
+      decimals : 6,
+      index : 1
+  }
+
+]
+
+
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
   "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"

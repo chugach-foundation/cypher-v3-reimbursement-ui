@@ -85,7 +85,7 @@ const TopBar = () => {
               leaveTo="opacity-0"
             >
               <span className="ml-2 text-lg font-bold text-th-fgd-1">
-                Mango
+                Reimbursement
               </span>
             </Transition>
           </div>

@@ -45,7 +45,7 @@ import {
   IOrderLineAdapter,
 } from "../public/charting_library/charting_library"
 import { Wallet } from "@solana/wallet-adapter-react"
-import { coingeckoIds, fetchNftsFromHolaplexIndexer } from "utils/tokens"
+import { coingeckoIds, devnetTokens, fetchNftsFromHolaplexIndexer, mainnetTokens } from "utils/tokens"
 import bs58 from "bs58"
 import { PerpMarketInfo } from "@blockworks-foundation/mango-client"
 
@@ -58,8 +58,8 @@ export const ENDPOINTS: EndpointInfo[] = [
   },
   {
     name: "devnet",
-    url: "https://mango.devnet.rpcpool.com",
-    websocket: "https://mango.devnet.rpcpool.com",
+    url: process.env.NEXT_PUBLIC_ENDPOINT || "https://mango.devnet.rpcpool.com",
+    websocket: process.env.NEXT_PUBLIC_ENDPOINT || "https://mango.devnet.rpcpool.com",
     custom: false,
   },
   {
@@ -70,10 +70,15 @@ export const ENDPOINTS: EndpointInfo[] = [
   },
 ]
 
-type ClusterType = "mainnet" | "devnet" | "testnet"
+type ClusterType = "mainnet" | "devnet" | "testnet";
 const DEFAULT_MANGO_GROUP_NAME = process.env.NEXT_PUBLIC_GROUP || "mainnet.1"
-export const CLUSTER = DEFAULT_MANGO_GROUP_NAME.split(".")[0] as ClusterType
+// export const CLUSTER = DEFAULT_MANGO_GROUP_NAME.split(".")[0] as ClusterType
+export const CLUSTER :ClusterType =  process.env.NEXT_PUBLIC_CLUSTER as ClusterType  || "devnet"; 
+export const TOKEN_CONFIGS = CLUSTER == 'devnet' ? devnetTokens : mainnetTokens
+
 const ENDPOINT = ENDPOINTS.find((e) => e.name === CLUSTER) as EndpointInfo
+export const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID || '');
+console.log("programId", programId.toBase58())
 console.log("endpoint", ENDPOINT)
 console.log("cluster", CLUSTER)
 
@@ -93,7 +98,7 @@ export const MNGO_INDEX = defaultMangoGroupIds!.oracles.findIndex(
   (t) => t.symbol === "MNGO"
 )
 
-export const programId = new PublicKey(defaultMangoGroupIds!.mangoProgramId)
+// export const programId = new PublicKey(defaultMangoGroupIds!.mangoProgramId)
 export const serumProgramId = new PublicKey(
   defaultMangoGroupIds!.serumProgramId
 )

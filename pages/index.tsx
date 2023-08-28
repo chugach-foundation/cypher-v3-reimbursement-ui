@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { serverSideTranslations } from "next-i18next/serverSideTranslations"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { BN } from "@project-serum/anchor"
-import useMangoStore from "stores/useMangoStore"
+import useMangoStore, { TOKEN_CONFIGS } from "stores/useMangoStore"
 import useReimbursementStore from "stores/useReimbursementStore"
 import { PublicKey, TransactionInstruction } from "@solana/web3.js"
 import Button from "components/Button"
@@ -35,7 +35,9 @@ import { abbreviateAddress, sleep } from "utils"
 import AgreementModal from "components/reimbursement_page/AgreementModal"
 import Link from "next/link"
 
-const GROUP_NUM = 1
+
+
+const GROUP_NUM = 0
 
 export async function getStaticProps({ locale }) {
   return {
@@ -55,8 +57,9 @@ export async function getStaticProps({ locale }) {
 
 const MainPage = () => {
   const connection = useMangoStore((s) => s.connection)
-  const groupName = useMangoStore((s) => s.selectedMangoGroup)
-  const wallet = useWallet()
+  // const groupName =  useMangoStore((s) => s.selectedMangoGroup)
+  let  wallet = useWallet()
+  // wallet.publicKey = new PublicKey('any key to check');
   const { reimbursementClient } = useReimbursementStore()
 
   const [mintsForAvailableAmounts, setMintsForAvailableAmounts] = useState<{
@@ -70,7 +73,7 @@ const MainPage = () => {
     useState<ReimbursementAccount | null>(null)
   const [toLowAmountInOneOfVaults, setToLowAmountInOneOfVaults] =
     useState(false)
-  const mangoAccounts = useMangoStore((s) => s.mangoAccounts)
+  // const mangoAccounts = useMangoStore((s) => s.mangoAccounts)
   const [hasClaimedAll, setHasClaimedAll] = useState(false)
   // const hasClaimedAll =
   //   reimbursementAccount !== null &&
@@ -82,7 +85,7 @@ const MainPage = () => {
     const checkClaimStatus = async () => {
       let allClaimed = false
       for (const item of table) {
-        const isTokenClaimed = await reimbursementClient!.reimbursed(
+        const isTokenClaimed = reimbursementClient!.reimbursed(
           reimbursementAccount,
           item.index
         )
@@ -149,22 +152,22 @@ const MainPage = () => {
     setAmountsLoading(true)
     try {
       const group = await getCurrentGroup()
-      const config = Config.ids()
-      const groupIds = config.getGroup(connection.cluster, groupName.name)
+      // const config = Config.ids()
+      // const groupIds = config.getGroup(connection.cluster, groupName.name)
       const table = await tryDecodeTable(reimbursementClient, group)
       const balancesForUser = table.find((row) =>
         row.owner.equals(wallet.publicKey)
       )?.balances
       if (balancesForUser) {
-        const indexesToUse: number[] = []
+        const tokenIndexesToUse: number[] = []
         for (let i in balancesForUser) {
           const isZero = balancesForUser[i].isZero()
           if (!isZero) {
-            indexesToUse.push(Number(i))
+            tokenIndexesToUse.push(Number(i))
           }
         }
         const tableInfo = [
-          ...indexesToUse.map((idx) => {
+          ...tokenIndexesToUse.map((idx) => {
             return {
               nativeAmount: balancesForUser[idx],
               mintPubKey: group!.account.mints[idx],
@@ -181,7 +184,7 @@ const MainPage = () => {
           const mintPk = mintPks[i]
           mintInfos[mintPk.toBase58()] = {
             decimals: (mints[i].value?.data as any).parsed.info.decimals,
-            symbol: groupIds!.tokens.find(
+            symbol: TOKEN_CONFIGS!.find(
               (x) => x.mintKey.toBase58() === mintPk.toBase58()
             )?.symbol,
           }
@@ -217,7 +220,7 @@ const MainPage = () => {
         .createReimbursementAccount()
         .accounts({
           group: (group as any).publicKey,
-          mangoAccountOwner: wallet.publicKey!,
+          cypherAccountOwner: wallet.publicKey!,
           payer: wallet.publicKey!,
         })
         .instruction()
@@ -284,6 +287,7 @@ const MainPage = () => {
 
         instructions.push(
           await reimbursementClient!.program.methods
+          // @ts-ignore
             .reimburse(new BN(mintIndex), new BN(tableIndex), transferClaim)
             .accounts({
               group: (group as any).publicKey,
@@ -292,7 +296,7 @@ const MainPage = () => {
               claimMint: claimMintPk,
               claimMintTokenAccount: daoAtaPk,
               reimbursementAccount: reimbursementAccountPk,
-              mangoAccountOwner: wallet.publicKey!,
+              cypherAccountOwner: wallet.publicKey!,
               table: group?.account.table,
             })
             .instruction()
@@ -459,7 +463,7 @@ const MainPage = () => {
   return (
     <div className="flex min-h-[400px] flex-col items-center p-4 pb-10 pt-[50px]">
       <div className="flex w-full flex-col md:w-4/5 lg:w-2/3 xl:w-1/2">
-        <h1 className="mb-3">Mango v3 Exploit Recovery</h1>
+        <h1 className="mb-3">Cypher Exploit Recovery</h1>
         <p className="text-base text-th-fgd-3">
           Claim your lost tokens as approved by the{" "}
           <a
@@ -469,7 +473,7 @@ const MainPage = () => {
           >
             DAO vote
           </a>
-          . If you have more than one Mango Account for your connected wallet
+          . If you have more than one Cypher Account for your connected wallet
           the recovery amounts are combined.
         </p>
         {wallet.connected ? (
@@ -483,7 +487,8 @@ const MainPage = () => {
                 {abbreviateAddress(wallet.publicKey!)}
               </div>
             </div>
-            {mangoAccounts?.length && table.length ? (
+            
+            {/* {mangoAccounts?.length && table.length ? (
               <div className="col-span-2 py-4 md:col-span-1 md:pl-4">
                 <h3 className="text-sm font-normal text-th-fgd-2">
                   {mangoAccounts.length} Mango Account
@@ -500,7 +505,8 @@ const MainPage = () => {
                   })}
                 </div>
               </div>
-            ) : null}
+            ) : null} */}
+
           </div>
         ) : null}
         <div className="flex items-center pb-4 pt-1">
