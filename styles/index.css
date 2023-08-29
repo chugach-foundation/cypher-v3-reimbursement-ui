@@ -2,7 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Theme */
+/* Theme 
+
+// Theme colors
+const colors: Colors = {
+  none: 'rgba(0, 0, 0, 0)',
+  primary: [
+    '#00DADC', // blue
+    '#CBFBF7', // frost
+    '#E9FFFC', // ice
+  ],
+  secondary: [
+    '#00151e', // twilight
+    '#36bbc5', // 5am
+    '#44BEC1', // darker-blue
+  ],
+  tertiary: [
+    '#0BDB69', // pump
+    '#FFEF62', // sun
+    '#EE4E4E', // dip
+    '#9A53CC', // dusk
+    '#484BEE', // post-rain
+    '#3496EA', // sky
+    '#6ACCE3', // sunny-blue
+    '#F06060', // dip-light
+    '#86474B', // dip-dark
+    '#848D4B', // sun-dark
+    '#067D4A', // pump-dark
+    '#07575E', // ocean (blue-blue)
+  ],
+  darkMode: ['#092B34', '#1F4048', '#84959A', '#44727f'],
+}
+*/
 
 :root {
   --primary: theme('colors.light-theme.orange.DEFAULT');

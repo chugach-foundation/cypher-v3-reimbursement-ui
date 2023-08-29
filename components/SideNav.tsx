@@ -52,7 +52,7 @@ const SideNav = ({ collapsed }) => {
             <div className={`flex flex-shrink-0 cursor-pointer items-center`}>
               <img
                 className={`h-8 w-auto`}
-                src="/assets/icons/logo.svg"
+                src="/assets/icons/logo-no-text.svg"
                 alt="next"
               />
               <Transition

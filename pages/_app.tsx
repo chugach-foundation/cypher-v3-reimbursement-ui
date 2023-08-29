@@ -39,7 +39,7 @@ const MangoStoreUpdater = () => {
 const PageTitle = () => {
   return (
     <Head>
-      <title>Mango Markets</title>
+      <title>Cypher Protocol</title>
     </Head>
   );
 };
@@ -62,15 +62,7 @@ function App({ Component, pageProps }) {
           CLUSTER === "mainnet"
             ? WalletAdapterNetwork.Mainnet
             : WalletAdapterNetwork.Devnet,
-        options: {
-          projectId: "f3d38b197d7039c03c345f82ed68ef9b",
-          metadata: {
-            name: "Mango Markets",
-            description: "Mango Markets",
-            url: "https://trade.mango.markets/",
-            icons: ["https://trade.mango.markets/assets/icons/logo.svg"],
-          },
-        },
+        options: {},
       }),
     ],
     []
@@ -85,11 +77,11 @@ function App({ Component, pageProps }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
           name="keywords"
-          content="Mango Markets, Serum, SRM, Serum DEX, DEFI, Decentralized Finance, Decentralised Finance, Crypto, ERC20, Ethereum, Decentralize, Solana, SOL, SPL, Cross-Chain, Trading, Fastest, Fast, SerumBTC, SerumUSD, SRM Tokens, SPL Tokens"
+          content="Cypher Protocol, Serum, SRM, Serum DEX, DEFI, Decentralized Finance, Decentralised Finance, Crypto, ERC20, Ethereum, Decentralize, Solana, SOL, SPL, Cross-Chain, Trading, Fastest, Fast, SerumBTC, SerumUSD, SRM Tokens, SPL Tokens"
         />
         <meta
           name="description"
-          content="Mango Markets - Decentralised, cross-margin trading up to 10x leverage with lightning speed and near-zero fees."
+          content="cypher protocol - trade dated futures on Solana"
         />
         <link
           rel="apple-touch-icon"
@@ -98,20 +90,10 @@ function App({ Component, pageProps }) {
         />
         <meta name="msapplication-TileColor" content="#da532c" />
         <meta name="theme-color" content="#ffffff" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Mango Markets" />
-        <meta
-          name="twitter:description"
-          content="Mango Markets - Decentralised, cross-margin trading up to 20x leverage with lightning speed and near-zero fees."
-        />
-        <meta
-          name="twitter:image"
-          content="https://www.mango.markets/socials/twitter-image-1200x600.png?34567878"
-        />
         <meta name="google" content="notranslate" />
         <link rel="manifest" href="/manifest.json"></link>
       </Head>
-      <ThemeProvider defaultTheme="Mango">
+      <ThemeProvider defaultTheme="Dark">
         <ErrorBoundary>
           <WalletProvider wallets={wallets}>
             <PageTitle />

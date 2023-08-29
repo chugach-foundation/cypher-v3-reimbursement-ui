@@ -465,13 +465,13 @@ const MainPage = () => {
       <div className="flex w-full flex-col md:w-4/5 lg:w-2/3 xl:w-1/2">
         <h1 className="mb-3">Cypher Exploit Recovery</h1>
         <p className="text-base text-th-fgd-3">
-          Claim your lost tokens as approved by the{" "}
+          Claim your first redemption package as outlined in the{" "}
           <a
-            href="https://app.realms.today/dao/MNGO/proposal/HRR4ydbGUYYTCUgr7KvKdWW87HzCQy9Fu6aL8X5BMFUT"
+            href="https://cypherlabs.notion.site/Loss-of-Funds-Resolution-4778af0828034445876a9e43e60b7dc1"
             target="_blank"
             rel="noopener noreferrer"
           >
-            DAO vote
+            Loss of Funds Resolution
           </a>
           . If you have more than one Cypher Account for your connected wallet
           the recovery amounts are combined.
@@ -565,29 +565,28 @@ const MainPage = () => {
               <div className="pt-6 text-xs text-th-fgd-3">
                 <div className="text-sm">
                   Below is language explaining that you agree to assign your
-                  claims to Mango Labs, LLC as well as release claims against
-                  it, the DAO, and related entities and people. Mango Labs, LLC
+                  claims to DENALI LABS INC as well as release claims against
+                  it, the DAO, and related entities and people. DENALI LABS INC
                   reserves its rights to enforce the assigned claims, and it
                   intends to then transfer any proceeds, after costs, to the
                   DAO.
                 </div>
                 <div className="mt-4">
-                  By clicking and accepting the tokens, I hereby irrevocably
-                  sell, convey, transfer and assign to Mango Labs, LLC all of my
-                  right, title and interest in, to and under all claims arising
-                  out of or related to the loss of my tokens in the October 2022
-                  incident, including, without limitation, all of my causes of
-                  action or other rights with respect to such claims, all rights
-                  to receive any amounts or property or other distribution in
-                  respect of or in connection with such claims, and any and all
-                  proceeds of any of the foregoing (including proceeds of
-                  proceeds). I further irrevocably and unconditionally release
-                  all claims I may have against Mango Labs, LLC, the Mango
-                  Decentralized Autonomous Entity, its core contributors, and
-                  any of their agents, affiliates, officers, employees, or
-                  principals related to this matter. This release constitutes an
-                  express, informed, knowing and voluntary waiver and
-                  relinquishment to the fullest extent permitted by law.
+                  By clicking and accepting the tokens, I recognize I am
+                  receiving [ $X ] on the dollar based on snapshot at [ TIME_STAMP ] and hereby
+                  irrevocably sell, convey, transfer and assign to DENALI LABS INC all of
+                  my right, title and interest in, to and under all claims arising out of or
+                  related to the loss of my tokens in the August 2023 incident, including,
+                  without limitation, all of my causes of action or other rights with respect
+                  to such claims, all rights to receive any amounts or property or other
+                  distribution in respect of or in connection with such claims, and any and
+                  all proceeds of any of the foregoing (including proceeds of proceeds).
+                  I further irrevocably and unconditionally release all claims I may have
+                  against DENALI LABS INC, OFFPISTE IO INC, the Cypher Decentralized
+                  Autonomous Organization, its core contributors, and any of their agents,
+                  affiliates, officers, employees, representatives, contractors, or principals
+                  related to this matter. This release constitutes an express, informed, knowing
+                  and voluntary waiver and relinquishment to the fullest extent permitted by law.
                 </div>
               </div>
             ) : null}
