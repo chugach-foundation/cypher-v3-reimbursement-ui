@@ -573,7 +573,7 @@ const MainPage = () => {
                 </div>
                 <div className="mt-4">
                   By clicking and accepting the tokens, I recognize I am
-                  receiving [ $X ] on the dollar based on snapshot at [ TIME_STAMP ] and hereby
+                  receiving ±0.2619 cents on the dollar based on snapshot at 2 September 2023 21:26:29 GMT and hereby
                   irrevocably sell, convey, transfer and assign to DENALI LABS INC all of
                   my right, title and interest in, to and under all claims arising out of or
                   related to the loss of my tokens in the August 2023 incident, including,

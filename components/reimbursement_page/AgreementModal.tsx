@@ -23,7 +23,7 @@ const AgreementModal = ({
           By clicking “I Agree” and claiming these tokens, I understand and
           manifest my assent and agreement to be bound by this enforceable
           contract, and agree that all claims under this agreement will be
-          resolved exclusively under the laws of the State of New York.
+          resolved exclusively under the laws of the State of Delaware.
         </div>
       </div>
       <div className="flex justify-center">
