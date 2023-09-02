@@ -23,7 +23,7 @@
     "@blockworks-foundation/mango-v3-reimbursement-lib": "^1.0.8",
     "@blockworks-foundation/mangolana": "0.0.1-beta.7",
     "@chugach-foundation/cypher-client": "^5.1.9",
-    "@chugach-foundation/cypher-v3-reimbursement-lib": "^1.2.0",
+    "@chugach-foundation/cypher-v3-reimbursement-lib": "^1.4.0",
     "@coral-xyz/anchor": "^0.28.1-beta.2",
     "@headlessui/react": "^0.0.0-insiders.2dbc38c",
     "@heroicons/react": "^1.0.0",

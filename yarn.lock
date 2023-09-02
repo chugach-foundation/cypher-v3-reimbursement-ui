@@ -1118,10 +1118,10 @@
     "@solana/web3.js" "^1.75.0"
     crypto-js "^4.1.1"
 
-"@chugach-foundation/cypher-v3-reimbursement-lib@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@chugach-foundation/cypher-v3-reimbursement-lib/-/cypher-v3-reimbursement-lib-1.2.0.tgz#b920d3f2dd88e96d544dd0353a233f2eab8192e2"
-  integrity sha512-GU2eP7pwaHM/Xr19icpGeailE2dc9VOx/CKYm6FSG3BbgGBHeB/7Tz2Zjrz4/L5yxjRwW1ELUc51wKXZffhuag==
+"@chugach-foundation/cypher-v3-reimbursement-lib@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@chugach-foundation/cypher-v3-reimbursement-lib/-/cypher-v3-reimbursement-lib-1.4.0.tgz#c28456c4290016dce3c5a27e209038d64924edd9"
+  integrity sha512-4tu4Zcywpwc/AHQZJJvgrletXAegXsGIRaRBCOqBbNCRHu3hmxHVOCw6BKUoCh45LRwiqGadGodpDBtJR6QAWQ==
   dependencies:
     "@chugach-foundation/cypher-client" "5.1.9"
     "@coral-xyz/anchor" "^0.28.1-beta.2"

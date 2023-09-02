@@ -1,5 +1,5 @@
 import create, { State } from "zustand";
-import { CypherV3ReimbursementClient } from "@chugach-foundation/cypher-v3-reimbursement-lib";
+import { CypherV3ReimbursementClient } from "@chugach-foundation/cypher-v3-reimbursement-lib/dist";
 import { Connection } from "@solana/web3.js";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { AnchorProvider } from '@coral-xyz/anchor'
