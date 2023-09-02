@@ -20,7 +20,7 @@ module.exports = {
         'light-theme': {
           orange: {
             DEFAULT: '#E9FFFC',  // primary blue
-            dark: '#092B34', 
+            dark: '#44BEC1', 
           },
           red: { DEFAULT: '#CC2929', dark: '#CC2929', muted: '#eba9a9' },
           green: { DEFAULT: '#FFEF62', dark: '#5EBF4D', muted: '#bfe5b8' },
@@ -37,7 +37,7 @@ module.exports = {
         'dark-theme': {
           yellow: {
             DEFAULT: '#00DADC',
-            dark: '#E4AF11',
+            dark: '#84959A  ',
           },
           red: { DEFAULT: '#CC2929', dark: '#AA2222', muted: '#571e20' },
           green: { DEFAULT: '#5EBF4D', dark: '#4BA53B', muted: '#365D31' },
