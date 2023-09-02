@@ -194,7 +194,7 @@ export const ConnectWalletButton: React.FC = () => {
           <button
             onClick={handleConnect}
             disabled={!mangoGroup}
-            className="rounded-none bg-th-primary-dark text-th-bkg-1 focus:outline-none disabled:cursor-wait disabled:text-th-bkg-2"
+            className="rounded-none bg-th-primary-dark text-th-fg-1 focus:outline-none disabled:cursor-wait disabled:text-th-bkg-2"
           >
             <div className="default-transition flex h-full flex-row items-center justify-center px-3">
               <WalletIcon className="mr-2 h-4 w-4 fill-current" />
