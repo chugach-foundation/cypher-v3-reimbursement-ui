@@ -1,10 +1,9 @@
 import create, { State } from "zustand";
-import { CypherV3ReimbursementClient } from "cypher-v3-reimbursement-lib/dist";
+import { CypherV3ReimbursementClient } from "@chugach-foundation/cypher-v3-reimbursement-lib";
 import { Connection } from "@solana/web3.js";
 import { WalletContextState } from "@solana/wallet-adapter-react";
-// import { AnchorProvider } from "@project-serum/anchor";
 import { AnchorProvider } from '@coral-xyz/anchor'
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 interface reimbursementStore extends State {
   reimbursementClient: CypherV3ReimbursementClient | null;

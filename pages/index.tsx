@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { serverSideTranslations } from "next-i18next/serverSideTranslations"
 import { useWallet } from "@solana/wallet-adapter-react"
-import { BN } from "@project-serum/anchor"
+import { BN } from "@coral-xyz/anchor"
 import useMangoStore, { TOKEN_CONFIGS } from "stores/useMangoStore"
 import useReimbursementStore from "stores/useReimbursementStore"
 import { PublicKey, TransactionInstruction } from "@solana/web3.js"
