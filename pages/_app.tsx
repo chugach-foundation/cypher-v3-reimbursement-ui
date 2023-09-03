@@ -71,9 +71,9 @@ function App({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>Mango Markets</title>
+        <title>Cypher Protocol</title>
         <link rel="icon" href="/favicon.ico" />
-        <meta property="og:title" content="Mango Markets" />
+        <meta property="og:title" content="Cypher Protocol" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
           name="keywords"
