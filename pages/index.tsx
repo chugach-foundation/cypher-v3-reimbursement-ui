@@ -620,8 +620,8 @@ const MainPage = () => {
               There are not enough funds in the claimable token vault. To
               protect user's funds, the vaults with claimable tokens are
               refilled in batches. Please reach out on{" "}
-              <Link href="https://discord.gg/mangomarkets">Discord</Link> or{" "}
-              <Link href="https://twitter.com/mangomarkets">Twitter</Link>.
+              <Link href="https://discord.gg/jr9Mu4Uz25">Discord</Link> or{" "}
+              <Link href="https://twitter.com/cypher_protocol">Twitter</Link>.
             </div>
           ) : null}
         </div>

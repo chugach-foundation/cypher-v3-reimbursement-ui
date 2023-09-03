@@ -31,7 +31,7 @@ module.exports = {
           'fgd-1': '#CBFBF7',
           'fgd-2': '#E9FFFC',
           'fgd-3': '#84959A',
-          'fgd-4': '#44727f',
+          'fgd-4': '#E9FFFC',
           'bkg-button': '#092B34',
         },
         'dark-theme': {
