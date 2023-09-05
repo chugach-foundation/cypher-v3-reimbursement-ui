@@ -571,6 +571,8 @@ const MainPage = () => {
                   intends to then transfer any proceeds, after costs, to the
                   DAO.
 
+                  <p> </p>
+
                   <p>NOTE: Any stolen funds that are returned to the Cypher Decentralized
                     Autonomous Organization or related entities will be distributed to those impacted
                     in the August 2023 event.</p>
