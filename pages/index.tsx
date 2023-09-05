@@ -58,7 +58,7 @@ export async function getStaticProps({ locale }) {
 const MainPage = () => {
   const connection = useMangoStore((s) => s.connection)
   // const groupName =  useMangoStore((s) => s.selectedMangoGroup)
-  let  wallet = useWallet()
+  let wallet = useWallet()
   // wallet.publicKey = new PublicKey('any key to check');
   const { reimbursementClient } = useReimbursementStore()
 
@@ -287,7 +287,7 @@ const MainPage = () => {
 
         instructions.push(
           await reimbursementClient!.program.methods
-          // @ts-ignore
+            // @ts-ignore
             .reimburse(new BN(mintIndex), new BN(tableIndex), transferClaim)
             .accounts({
               group: (group as any).publicKey,
@@ -487,7 +487,7 @@ const MainPage = () => {
                 {abbreviateAddress(wallet.publicKey!)}
               </div>
             </div>
-            
+
             {/* {mangoAccounts?.length && table.length ? (
               <div className="col-span-2 py-4 md:col-span-1 md:pl-4">
                 <h3 className="text-sm font-normal text-th-fgd-2">
@@ -570,6 +570,10 @@ const MainPage = () => {
                   reserves its rights to enforce the assigned claims, and it
                   intends to then transfer any proceeds, after costs, to the
                   DAO.
+
+                  <p>NOTE: Any stolen funds that are returned to the Cypher Decentralized
+                    Autonomous Organization or related entities will be distributed to those impacted
+                    in the August 2023 event.</p>
                 </div>
                 <div className="mt-4">
                   By clicking and accepting the tokens, I recognize I am
